@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeTrack Pro - Habit Tracker</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js CDN for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom Styles for a Premium Feel */
+        
+        html,
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            scroll-behavior: smooth;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* Gradients for different trackers */
+        
+        .gradient-vape {
+            background: linear-gradient(135deg, #3b82f6, #1e3a8a);
+        }
+        
+        .gradient-cigarette {
+            background: linear-gradient(135deg, #f59e0b, #b45309);
+        }
+        
+        .gradient-urge {
+            background: linear-gradient(135deg, #8b5cf6, #5b21b6);
+        }
+        
+        .nav-btn.active svg {
+            color: #60a5fa;
+        }
+        
+        .nav-btn.active span {
+            color: #60a5fa;
+            font-weight: 600;
+        }
+        
+        .modal-bg {
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+        
+        .lang-btn.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 text-white min-h-screen flex flex-col">
+
+    <!-- Main Content Area -->
+    <main class="flex-grow p-4 pb-24">
+
+        <!-- ===== Dashboard Page ===== -->
+        <div id="dashboardPage" class="page active">
+            <header class="mb-6">
+                <h1 class="text-3xl font-bold text-slate-100">ড্যাশবোর্ড</h1>
+                <p class="text-slate-400">আপনার অভ্যাসের সারসংক্ষেপ</p>
+            </header>
+            <div id="dashboardGrid" class="space-y-4">
+                <!-- Tracker cards will be injected here -->
+            </div>
+        </div>
+
+        <!-- ===== Stats Page ===== -->
+        <div id="statsPage" class="page">
+            <header class="mb-6">
+                <h1 class="text-3xl font-bold text-slate-100">পরিসংখ্যান</h1>
+                <p class="text-slate-400">আপনার অগ্রগতি বিস্তারিত দেখুন</p>
+            </header>
+            <div class="mb-4">
+                <select id="statsTrackerSelect" class="w-full bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <!-- Options populated by JS -->
+                </select>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl shadow-lg">
+                <canvas id="mainChart"></canvas>
+            </div>
+            <div id="statsSummary" class="mt-4 grid grid-cols-2 gap-4 text-center">
+                <!-- Stats summary populated by JS -->
+            </div>
+        </div>
+
+        <!-- ===== Motivation Page ===== -->
+        <div id="motivationPage" class="page">
+            <header class="mb-6">
+                <h1 class="text-3xl font-bold text-slate-100">অনুপ্রেরণা</h1>
+                <p class="text-slate-400">কঠিন সময়ে আপনার সঙ্গী</p>
+            </header>
+
+            <!-- Language Toggle -->
+            <div class="flex justify-center mb-6 bg-slate-800 p-1 rounded-full w-fit mx-auto">
+                <button id="langBnBtn" class="lang-btn active font-semibold px-6 py-2 rounded-full text-sm">বাংলা</button>
+                <button id="langEnBtn" class="lang-btn font-semibold px-6 py-2 rounded-full text-sm">English</button>
+            </div>
+
+            <!-- Content -->
+            <div id="motivationContentBn" class="space-y-6">
+                <div>
+                    <h2 class="text-xl font-bold text-blue-400 mb-3">তাৎক্ষণিক করণীয়</h2>
+                    <div class="space-y-3">
+                        <div class="bg-slate-800 p-4 rounded-lg"><strong>গভীর শ্বাস নিন:</strong> ৫ সেকেন্ড শ্বাস নিন, ধরে রাখুন, এবং ৭ সেকেন্ড ধরে ছাড়ুন। এটি আপনার মনকে শান্ত করবে।</div>
+                        <div class="bg-slate-800 p-4 rounded-lg"><strong>পানি পান করুন:</strong> এক গ্লাস ঠান্ডা পানি পান করুন। এটি আপনার মনোযোগ অন্যদিকে সরাবে।</div>
+                        <div class="bg-slate-800 p-4 rounded-lg"><strong>একটু হেঁটে আসুন:</strong> ৫-১০ মিনিটের জন্য বাইরে বা ঘরের ভেতরেই একটু হাঁটুন। শারীরিক নড়াচড়া মানসিক চাপ কমায়।</div>
+                        <div class="bg-slate-800 p-4 rounded-lg"><strong>মনোযোগ সরান:</strong> গান শুনুন, কোনো বন্ধুকে ফোন দিন বা আপনার পছন্দের কোনো কাজ করুন।</div>
+                        <div class="bg-slate-800 p-4 rounded-lg"><strong>লক্ষ্য মনে করুন:</strong> ভাবুন, কেন আপনি এই অভ্যাসটি ছাড়তে চেয়েছিলেন। আপনার চূড়ান্ত লক্ষ্য আপনাকে শক্তি জোগাবে।</div>
+                    </div>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-blue-400 mb-3">অনুপ্রেরণামূলক উক্তি</h2>
+                    <div class="space-y-3">
+                        <blockquote class="bg-slate-800 p-4 rounded-lg border-l-4 border-blue-500">"এগিয়ে যাওয়ার মূল রহস্য হলো শুরু করা।" <cite class="block text-right text-sm text-slate-400 mt-2">- মার্ক টোয়েন</cite></blockquote>
+                        <blockquote class="bg-slate-800 p-4 rounded-lg border-l-4 border-blue-500">"যতক্ষণ আপনি থামছেন না, ততক্ষণ কত ধীরে এগোচ্ছেন সেটা কোনো বিষয় নয়।" <cite class="block text-right text-sm text-slate-400 mt-2">- কনফুসিয়াস</cite></blockquote>
+                    </div>
+                </div>
+            </div>
+
+            <div id="motivationContentEn" class="hidden space-y-6">
+                <div>
+                    <h2 class="text-xl font-bold text-blue-400 mb-3">Quick Tips</h2>
+                    <div class="space-y-3">
+                        <div class="bg-slate-800 p-4 rounded-lg"><strong>Deep Breath:</strong> Inhale for 5 seconds, hold, and exhale for 7 seconds. It will calm your mind.</div>
+                        <div class="bg-slate-800 p-4 rounded-lg"><strong>Drink Water:</strong> Drink a glass of cold water. It will distract your attention.</div>
+                        <div class="bg-slate-800 p-4 rounded-lg"><strong>Take a Walk:</strong> Walk outside or even inside for 5-10 minutes. Physical movement reduces stress.</div>
+                        <div class="bg-slate-800 p-4 rounded-lg"><strong>Distract Yourself:</strong> Listen to music, call a friend, or do something you enjoy.</div>
+                        <div class="bg-slate-800 p-4 rounded-lg"><strong>Remember Your Goal:</strong> Think about why you wanted to quit this habit. Your ultimate goal will give you strength.</div>
+                    </div>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-blue-400 mb-3">Motivational Quotes</h2>
+                    <div class="space-y-3">
+                        <blockquote class="bg-slate-800 p-4 rounded-lg border-l-4 border-blue-500">"The secret of getting ahead is getting started." <cite class="block text-right text-sm text-slate-400 mt-2">- Mark Twain</cite></blockquote>
+                        <blockquote class="bg-slate-800 p-4 rounded-lg border-l-4 border-blue-500">"It does not matter how slowly you go as long as you do not stop." <cite class="block text-right text-sm text-slate-400 mt-2">- Confucius</cite></blockquote>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Settings Page ===== -->
+        <div id="settingsPage" class="page">
+            <header class="mb-6">
+                <h1 class="text-3xl font-bold text-slate-100">সেটিংস</h1>
+                <p class="text-slate-400">আপনার ট্র্যাকারগুলো কনফিগার করুন</p>
+            </header>
+            <div id="settingsContainer" class="space-y-6">
+                <!-- Settings forms will be injected here -->
+            </div>
+            <div class="mt-8 bg-red-900/50 p-4 rounded-xl border border-red-700">
+                <h3 class="text-lg font-semibold text-red-400 mb-2">বিপদজনক এলাকা</h3>
+                <p class="text-sm text-slate-400 mb-4">সাবধান! এটি আপনার সকল সেভ করা ডেটা মুছে ফেলবে।</p>
+                <button id="resetDataButton" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-md shadow-lg transform transition-transform duration-200 active:scale-95 focus:outline-none">
+                    সব ডেটা রিসেট করুন
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation & Floating Action Button -->
+    <div class="fixed bottom-0 left-0 right-0 h-20">
+        <div class="relative h-full">
+            <!-- Floating Action Button -->
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+                <button id="addEntryBtn" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg transform transition-transform active:scale-90">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                </button>
+            </div>
+
+            <!-- Navigation Bar -->
+            <nav class="absolute bottom-0 left-0 right-0 bg-slate-800/80 backdrop-blur-sm border-t border-slate-700 grid grid-cols-5 items-center h-16 z-10">
+                <button data-page="dashboardPage" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-colors duration-300 active">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    <span class="text-xs mt-1">ড্যাশবোর্ড</span>
+                </button>
+                <button data-page="statsPage" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-colors duration-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    <span class="text-xs mt-1">পরিসংখ্যান</span>
+                </button>
+                <div class="w-full"></div>
+                <!-- Spacer for FAB -->
+                <button data-page="motivationPage" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-colors duration-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                    <span class="text-xs mt-1">অনুপ্রেরণা</span>
+                </button>
+                <button data-page="settingsPage" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-colors duration-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span class="text-xs mt-1">সেটিংস</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Add Entry Modal -->
+    <div id="addEntryModal" class="fixed inset-0 modal-bg flex items-center justify-center z-50 hidden">
+        <div class="bg-slate-800 rounded-2xl shadow-xl p-6 w-11/12 max-w-sm text-center">
+            <h2 class="text-2xl font-bold mb-4">লগ করুন</h2>
+            <p class="text-slate-400 mb-6">কোন অভ্যাসটি আপনি এখন লগ করতে চান?</p>
+            <div id="modalTrackerList" class="space-y-3">
+                <!-- Modal buttons populated by JS -->
+            </div>
+            <button id="closeModalBtn" class="mt-6 bg-slate-700 hover:bg-slate-600 text-slate-300 font-semibold py-2 px-4 rounded-lg w-full">বন্ধ করুন</button>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+                    // --- STATE & DATA STRUCTURE ---
+                    let appData = {};
+                    let mainChartInstance = null;
+                    let timerIntervals = {};
+
+                    const defaultData = {
+                        trackers: {
+                            vape: {
+                                id: 'vape',
+                                name: 'Vape Tracker',
+                                icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+                                gradient: 'gradient-vape',
+                                history: [],
+                                settings: {
+                                    dailyLimit: 20,
+                                    oldAvg: 60,
+                                    cost: 500,
+                                    units: 1500,
+                                    unitName: 'পাফ'
+                                }
+                            },
+                            cigarette: {
+                                id: 'cigarette',
+                                name: 'Cigarette Tracker',
+                                icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-1.414 1.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-1.414-1.414A1 1 0 006.586 13H4"></path></svg>`,
+                                gradient: 'gradient-cigarette',
+                                history: [],
+                                settings: {
+                                    dailyLimit: 10,
+                                    oldAvg: 20,
+                                    cost: 300,
+                                    units: 20,
+                                    unitName: 'টি'
+                                }
+                            },
+                            urge: {
+                                id: 'urge',
+                                name: 'Urge Tracker',
+                                icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>`,
+                                gradient: 'gradient-urge',
+                                history: [],
+                                settings: {
+                                    dailyLimit: 2,
+                                    oldAvg: 5,
+                                    cost: 0,
+                                    units: 0,
+                                    unitName: 'বার'
+                                }
+                            }
+                        }
+                    };
+
+                    // --- DOM ELEMENTS ---
+                    const pages = document.querySelectorAll('.page');
+                    const navButtons = document.querySelectorAll('.nav-btn');
+                    const addEntryBtn = document.getElementById('addEntryBtn');
+                    const addEntryModal = document.getElementById('addEntryModal');
+                    const closeModalBtn = document.getElementById('closeModalBtn');
+                    const langBnBtn = document.getElementById('langBnBtn');
+                    const langEnBtn = document.getElementById('langEnBtn');
+                    const motivationContentBn = document.getElementById('motivationContentBn');
+                    const motivationContentEn = document.getElementById('motivationContentEn');
+
+
+                    // --- DATA HANDLING ---
+                    const saveData = () => localStorage.setItem('lifeTrackProData', JSON.stringify(appData));
+                    const loadData = () => {
+                        const data = localStorage.getItem('lifeTrackProData');
+                        appData = data ? JSON.parse(data) : JSON.parse(JSON.stringify(defaultData)); // Deep copy
+                    };
+
+                    // --- CORE LOGIC ---
+                    function logEntry(trackerId) {
+                        appData.trackers[trackerId].history.push(Date.now());
+                        saveData();
+                        renderDashboard();
+                        closeModal();
+                    }
+
+                    // --- RENDERING FUNCTIONS ---
+                    function renderDashboard() {
+                        const grid = document.getElementById('dashboardGrid');
+                        grid.innerHTML = '';
+                        Object.values(appData.trackers).forEach(tracker => {
+                            const todayStart = new Date().setHours(0, 0, 0, 0);
+                            const countToday = tracker.history.filter(ts => ts >= todayStart).length;
+                            const lastEntry = tracker.history.length > 0 ? tracker.history[tracker.history.length - 1] : null;
+
+                            const card = document.createElement('div');
+                            card.className = `p-4 rounded-xl shadow-lg text-white ${tracker.gradient}`;
+                            card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h2 class="text-xl font-bold">${tracker.name}</h2>
+                                <p class="text-sm opacity-80">আজ: <strong>${countToday} / ${tracker.settings.dailyLimit}</strong> ${tracker.settings.unitName}</p>
+                            </div>
+                            <div class="p-2 bg-white/20 rounded-lg">${tracker.icon}</div>
+                        </div>
+                        <div class="mt-4 text-center">
+                            <p class="text-sm opacity-80">শেষবার থেকে বিরত</p>
+                            <p id="timer-${tracker.id}" class="text-2xl font-semibold">শুরু করুন!</p>
+                        </div>
+                    `;
+                            grid.appendChild(card);
+                            startTimer(tracker.id, lastEntry);
+                        });
+                    }
+
+                    function renderStatsPage(trackerId = 'vape') {
+                        const select = document.getElementById('statsTrackerSelect');
+                        select.innerHTML = '';
+                        Object.values(appData.trackers).forEach(tracker => {
+                            const option = document.createElement('option');
+                            option.value = tracker.id;
+                            option.textContent = tracker.name;
+                            select.appendChild(option);
+                        });
+                        select.value = trackerId;
+
+                        renderMainChart(trackerId);
+                        renderStatsSummary(trackerId);
+                    }
+
+                    function renderStatsSummary(trackerId) {
+                        const summaryEl = document.getElementById('statsSummary');
+                        const tracker = appData.trackers[trackerId];
+                        const history = tracker.history;
+
+                        const totalEntries = history.length;
+                        const todayStart = new Date().setHours(0, 0, 0, 0);
+                        const todayEntries = history.filter(t => t >= todayStart).length;
+
+                        let moneySaved = 0;
+                        if (tracker.settings.cost > 0 && tracker.settings.units > 0) {
+                            const costPerUnit = tracker.settings.cost / tracker.settings.units;
+                            const startDate = history.length > 0 ? new Date(history[0]) : new Date();
+                            const days = Math.max(1, (Date.now() - startDate.getTime()) / (1000 * 3600 * 24));
+                            const expectedEntries = Math.floor(days * tracker.settings.oldAvg);
+                            const savedEntries = expectedEntries - totalEntries;
+                            moneySaved = savedEntries > 0 ? (savedEntries * costPerUnit).toFixed(2) : 0;
+                        }
+
+                        summaryEl.innerHTML = `
+                    <div class="bg-slate-800 p-3 rounded-lg"><p class="text-slate-400 text-sm">আজকের গণনা</p><p class="font-bold text-xl">${todayEntries}</p></div>
+                    <div class="bg-slate-800 p-3 rounded-lg"><p class="text-slate-400 text-sm">সর্বমোট গণনা</p><p class="font-bold text-xl">${totalEntries}</p></div>
+                    <div class="bg-slate-800 p-3 rounded-lg col-span-2"><p class="text-slate-400 text-sm">আনুমানিক সঞ্চয়</p><p class="font-bold text-xl text-green-400">৳${moneySaved}</p></div>
+                `;
+                    }
+
+                    function renderMainChart(trackerId) {
+                        const tracker = appData.trackers[trackerId];
+                        const ctx = document.getElementById('mainChart').getContext('2d');
+
+                        const dataPoints = tracker.history.reduce((acc, ts) => {
+                            const date = new Date(ts).setHours(0, 0, 0, 0);
+                            acc[date] = (acc[date] || 0) + 1;
+                            return acc;
+                        }, {});
+
+                        const labels = Object.keys(dataPoints).map(ts => new Date(parseInt(ts)));
+                        const data = Object.values(dataPoints);
+
+                        if (mainChartInstance) mainChartInstance.destroy();
+                        mainChartInstance = new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: `দৈনিক ${tracker.settings.unitName}`,
+                                    data: data,
+                                    backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                                    borderColor: 'rgba(59, 130, 246, 1)',
+                                    borderWidth: 1,
+                                    borderRadius: 5,
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                scales: {
+                                    x: {
+                                        type: 'time',
+                                        time: {
+                                            unit: 'day'
+                                        },
+                                        ticks: {
+                                            color: '#9ca3af'
+                                        }
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            color: '#9ca3af',
+                                            stepSize: 1
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    function renderSettingsPage() {
+                        const container = document.getElementById('settingsContainer');
+                        container.innerHTML = '';
+                        Object.values(appData.trackers).forEach(tracker => {
+                                    const formHtml = `
+                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                            <h3 class="text-xl font-bold mb-4 ${tracker.gradient} bg-clip-text text-transparent">${tracker.name}</h3>
+                            <form class="space-y-3" data-tracker-id="${tracker.id}" onsubmit="handleSettingsSave(event)">
+                                <div>
+                                    <label class="text-sm text-slate-400">দৈনিক লক্ষ্য (${tracker.settings.unitName})</label>
+                                    <input type="number" name="dailyLimit" value="${tracker.settings.dailyLimit}" class="w-full bg-slate-700 p-2 rounded-md">
+                                </div>
+                                ${tracker.settings.cost > 0 ? `
+                                <div>
+                                    <label class="text-sm text-slate-400">পূর্বের গড় ব্যবহার (দৈনিক)</label>
+                                    <input type="number" name="oldAvg" value="${tracker.settings.oldAvg}" class="w-full bg-slate-700 p-2 rounded-md">
+                                </div>
+                                <div>
+                                    <label class="text-sm text-slate-400">প্যাকেট/লিকুইডের দাম (৳)</label>
+                                    <input type="number" name="cost" value="${tracker.settings.cost}" class="w-full bg-slate-700 p-2 rounded-md">
+                                </div>
+                                <div>
+                                    <label class="text-sm text-slate-400">প্রতি প্যাকেটে ইউনিট সংখ্যা</label>
+                                    <input type="number" name="units" value="${tracker.settings.units}" class="w-full bg-slate-700 p-2 rounded-md">
+                                </div>` : ''}
+                                <button type="submit" class="w-full font-bold py-2 px-4 rounded-md text-white ${tracker.gradient}">সেভ করুন</button>
+                            </form>
+                        </div>
+                    `;
+                    container.innerHTML += formHtml;
+                });
+            }
+            window.handleSettingsSave = function(event) {
+                event.preventDefault();
+                const form = event.target;
+                const trackerId = form.dataset.trackerId;
+                const tracker = appData.trackers[trackerId];
+                
+                tracker.settings.dailyLimit = parseInt(form.elements.dailyLimit.value);
+                if(form.elements.oldAvg) tracker.settings.oldAvg = parseInt(form.elements.oldAvg.value);
+                if(form.elements.cost) tracker.settings.cost = parseFloat(form.elements.cost.value);
+                if(form.elements.units) tracker.settings.units = parseInt(form.elements.units.value);
+                
+                saveData();
+                alert(`${tracker.name} সেটিংস সেভ হয়েছে!`);
+                renderDashboard();
+            }
+
+            // --- UTILITY FUNCTIONS ---
+            function startTimer(trackerId, lastEntry) {
+                if (timerIntervals[trackerId]) clearInterval(timerIntervals[trackerId]);
+                const timerEl = document.getElementById(`timer-${trackerId}`);
+                if (!timerEl) return;
+
+                function update() {
+                    if (!lastEntry) {
+                        timerEl.textContent = 'এখনই শুরু করুন!';
+                        return;
+                    }
+                    const diff = Date.now() - lastEntry;
+                    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((diff % (1000 * 60)) / 1000);
+                    timerEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
+                }
+                update();
+                timerIntervals[trackerId] = setInterval(update, 1000);
+            }
+
+            function switchPage(pageId) {
+                pages.forEach(p => p.classList.toggle('active', p.id === pageId));
+                navButtons.forEach(b => b.classList.toggle('active', b.dataset.page === pageId));
+
+                if(pageId === 'dashboardPage') renderDashboard();
+                if(pageId === 'statsPage') renderStatsPage();
+                if(pageId === 'settingsPage') renderSettingsPage();
+            }
+
+            function openModal() {
+                const list = document.getElementById('modalTrackerList');
+                list.innerHTML = '';
+                Object.values(appData.trackers).forEach(tracker => {
+                    const button = document.createElement('button');
+                    button.className = `w-full text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center ${tracker.gradient}`;
+                    button.innerHTML = `${tracker.icon} <span class="ml-2">${tracker.name}</span>`;
+                    button.onclick = () => logEntry(tracker.id);
+                    list.appendChild(button);
+                });
+                addEntryModal.classList.remove('hidden');
+            }
+            function closeModal() {
+                addEntryModal.classList.add('hidden');
+            }
+            
+            // --- EVENT LISTENERS ---
+            navButtons.forEach(btn => btn.addEventListener('click', () => switchPage(btn.dataset.page)));
+            addEntryBtn.addEventListener('click', openModal);
+            closeModalBtn.addEventListener('click', closeModal);
+            addEntryModal.addEventListener('click', (event) => {
+                if (event.target.id === 'addEntryModal') {
+                    closeModal();
+                }
+            });
+            document.getElementById('statsTrackerSelect').addEventListener('change', (e) => {
+                renderMainChart(e.target.value);
+                renderStatsSummary(e.target.value);
+            });
+            document.getElementById('resetDataButton').addEventListener('click', () => {
+                if(confirm('আপনি কি নিশ্চিত যে আপনার সমস্ত ডেটা মুছে ফেলতে চান? এটি আর ফেরানো যাবে না।')){
+                    appData = JSON.parse(JSON.stringify(defaultData));
+                    saveData();
+                    switchPage('dashboardPage');
+                }
+            });
+
+            langBnBtn.addEventListener('click', () => {
+                motivationContentBn.classList.remove('hidden');
+                motivationContentEn.classList.add('hidden');
+                langBnBtn.classList.add('active');
+                langEnBtn.classList.remove('active');
+            });
+            langEnBtn.addEventListener('click', () => {
+                motivationContentBn.classList.add('hidden');
+                motivationContentEn.classList.remove('hidden');
+                langBnBtn.classList.remove('active');
+                langEnBtn.classList.add('active');
+            });
+
+            // --- INITIALIZATION ---
+            function initializeApp() {
+                loadData();
+                switchPage('dashboardPage');
+            }
+            
+            initializeApp();
+        });
+    </script>
+</body>
+
+</html>

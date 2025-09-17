@@ -7,21 +7,15 @@
     <title>LifeTrack Pro - Habit Tracker</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
 
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Chart.js CDN for graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
-    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        /* Custom Styles for a Premium Feel */
-        
         html,
         body {
             font-family: 'Inter', sans-serif;
@@ -48,7 +42,6 @@
                 transform: translateY(0);
             }
         }
-        /* Gradients for different trackers */
         
         .gradient-vape {
             background: linear-gradient(135deg, #3b82f6, #1e3a8a);
@@ -62,10 +55,11 @@
             background: linear-gradient(135deg, #8b5cf6, #5b21b6);
         }
         
-        .nav-btn.active svg {
-            color: #60a5fa;
+        .gradient-premium {
+            background: linear-gradient(135deg, #10b981, #047857);
         }
         
+        .nav-btn.active svg,
         .nav-btn.active span {
             color: #60a5fa;
             font-weight: 600;
@@ -80,6 +74,16 @@
             background-color: #3b82f6;
             color: white;
         }
+        
+        .tab-btn.active {
+            color: #3b82f6;
+            border-color: #3b82f6;
+        }
+        
+        .achievement-locked {
+            filter: grayscale(100%);
+            opacity: 0.5;
+        }
     </style>
 </head>
 
@@ -91,162 +95,292 @@
         <!-- ===== Dashboard Page ===== -->
         <div id="dashboardPage" class="page active">
             <header class="mb-6">
-                <h1 class="text-3xl font-bold text-slate-100">ড্যাশবোর্ড</h1>
-                <p class="text-slate-400">আপনার অভ্যাসের সারসংক্ষেপ</p>
+                <h1 data-lang-key="dashboard_title" class="text-3xl font-bold text-slate-100">ড্যাশবোর্ড</h1>
+                <p data-lang-key="dashboard_subtitle" class="text-slate-400">আপনার অভ্যাসের সারসংক্ষেপ</p>
             </header>
-            <div id="dashboardGrid" class="space-y-4">
-                <!-- Tracker cards will be injected here -->
-            </div>
+            <div id="dashboardGrid" class="space-y-4"></div>
         </div>
 
-        <!-- ===== Stats Page ===== -->
-        <div id="statsPage" class="page">
+        <!-- ===== Insights Page ===== -->
+        <div id="insightsPage" class="page">
             <header class="mb-6">
-                <h1 class="text-3xl font-bold text-slate-100">পরিসংখ্যান</h1>
-                <p class="text-slate-400">আপনার অগ্রগতি বিস্তারিত দেখুন</p>
+                <h1 data-lang-key="insights_title" class="text-3xl font-bold text-slate-100">ইনসাইট</h1>
+                <p data-lang-key="insights_subtitle" class="text-slate-400">আপনার অগ্রগতি ও অর্জন</p>
             </header>
             <div class="mb-4">
-                <select id="statsTrackerSelect" class="w-full bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <!-- Options populated by JS -->
-                </select>
+                <select id="insightsTrackerSelect" class="w-full bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
             </div>
-            <div class="bg-slate-800 p-4 rounded-xl shadow-lg">
-                <canvas id="mainChart"></canvas>
+            <!-- Sub-navigation tabs -->
+            <div class="mb-4 border-b border-slate-700 flex">
+                <button data-tab="charts" data-lang-key="tab_charts" class="tab-btn insights-tab-btn active flex-1 py-2 font-semibold border-b-2 transition-colors">চার্ট</button>
+                <button data-tab="history" data-lang-key="tab_history" class="tab-btn insights-tab-btn flex-1 py-2 font-semibold border-b-2 border-transparent text-slate-400 transition-colors">ইতিহাস</button>
+                <button data-tab="achievements" data-lang-key="tab_achievements" class="tab-btn insights-tab-btn flex-1 py-2 font-semibold border-b-2 border-transparent text-slate-400 transition-colors">অর্জন</button>
             </div>
-            <div id="statsSummary" class="mt-4 grid grid-cols-2 gap-4 text-center">
-                <!-- Stats summary populated by JS -->
+
+            <div id="chartsTab" class="insights-tab-content">
+                <div class="bg-slate-800 p-4 rounded-xl shadow-lg">
+                    <canvas id="mainChart"></canvas>
+                </div>
+                <div id="statsSummary" class="mt-4 grid grid-cols-2 gap-4 text-center"></div>
             </div>
+
+            <div id="historyTab" class="insights-tab-content hidden space-y-3"></div>
+            <div id="achievementsTab" class="insights-tab-content hidden grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
         </div>
 
         <!-- ===== Motivation Page ===== -->
-        <div id="motivationPage" class="page">
-            <header class="mb-6">
-                <h1 class="text-3xl font-bold text-slate-100">অনুপ্রেরণা</h1>
-                <p class="text-slate-400">কঠিন সময়ে আপনার সঙ্গী</p>
-            </header>
-
-            <!-- Language Toggle -->
-            <div class="flex justify-center mb-6 bg-slate-800 p-1 rounded-full w-fit mx-auto">
-                <button id="langBnBtn" class="lang-btn active font-semibold px-6 py-2 rounded-full text-sm">বাংলা</button>
-                <button id="langEnBtn" class="lang-btn font-semibold px-6 py-2 rounded-full text-sm">English</button>
-            </div>
-
-            <!-- Content -->
-            <div id="motivationContentBn" class="space-y-6">
-                <div>
-                    <h2 class="text-xl font-bold text-blue-400 mb-3">তাৎক্ষণিক করণীয়</h2>
-                    <div class="space-y-3">
-                        <div class="bg-slate-800 p-4 rounded-lg"><strong>গভীর শ্বাস নিন:</strong> ৫ সেকেন্ড শ্বাস নিন, ধরে রাখুন, এবং ৭ সেকেন্ড ধরে ছাড়ুন। এটি আপনার মনকে শান্ত করবে।</div>
-                        <div class="bg-slate-800 p-4 rounded-lg"><strong>পানি পান করুন:</strong> এক গ্লাস ঠান্ডা পানি পান করুন। এটি আপনার মনোযোগ অন্যদিকে সরাবে।</div>
-                        <div class="bg-slate-800 p-4 rounded-lg"><strong>একটু হেঁটে আসুন:</strong> ৫-১০ মিনিটের জন্য বাইরে বা ঘরের ভেতরেই একটু হাঁটুন। শারীরিক নড়াচড়া মানসিক চাপ কমায়।</div>
-                        <div class="bg-slate-800 p-4 rounded-lg"><strong>মনোযোগ সরান:</strong> গান শুনুন, কোনো বন্ধুকে ফোন দিন বা আপনার পছন্দের কোনো কাজ করুন।</div>
-                        <div class="bg-slate-800 p-4 rounded-lg"><strong>লক্ষ্য মনে করুন:</strong> ভাবুন, কেন আপনি এই অভ্যাসটি ছাড়তে চেয়েছিলেন। আপনার চূড়ান্ত লক্ষ্য আপনাকে শক্তি জোগাবে।</div>
-                    </div>
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold text-blue-400 mb-3">অনুপ্রেরণামূলক উক্তি</h2>
-                    <div class="space-y-3">
-                        <blockquote class="bg-slate-800 p-4 rounded-lg border-l-4 border-blue-500">"এগিয়ে যাওয়ার মূল রহস্য হলো শুরু করা।" <cite class="block text-right text-sm text-slate-400 mt-2">- মার্ক টোয়েন</cite></blockquote>
-                        <blockquote class="bg-slate-800 p-4 rounded-lg border-l-4 border-blue-500">"যতক্ষণ আপনি থামছেন না, ততক্ষণ কত ধীরে এগোচ্ছেন সেটা কোনো বিষয় নয়।" <cite class="block text-right text-sm text-slate-400 mt-2">- কনফুসিয়াস</cite></blockquote>
-                    </div>
-                </div>
-            </div>
-
-            <div id="motivationContentEn" class="hidden space-y-6">
-                <div>
-                    <h2 class="text-xl font-bold text-blue-400 mb-3">Quick Tips</h2>
-                    <div class="space-y-3">
-                        <div class="bg-slate-800 p-4 rounded-lg"><strong>Deep Breath:</strong> Inhale for 5 seconds, hold, and exhale for 7 seconds. It will calm your mind.</div>
-                        <div class="bg-slate-800 p-4 rounded-lg"><strong>Drink Water:</strong> Drink a glass of cold water. It will distract your attention.</div>
-                        <div class="bg-slate-800 p-4 rounded-lg"><strong>Take a Walk:</strong> Walk outside or even inside for 5-10 minutes. Physical movement reduces stress.</div>
-                        <div class="bg-slate-800 p-4 rounded-lg"><strong>Distract Yourself:</strong> Listen to music, call a friend, or do something you enjoy.</div>
-                        <div class="bg-slate-800 p-4 rounded-lg"><strong>Remember Your Goal:</strong> Think about why you wanted to quit this habit. Your ultimate goal will give you strength.</div>
-                    </div>
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold text-blue-400 mb-3">Motivational Quotes</h2>
-                    <div class="space-y-3">
-                        <blockquote class="bg-slate-800 p-4 rounded-lg border-l-4 border-blue-500">"The secret of getting ahead is getting started." <cite class="block text-right text-sm text-slate-400 mt-2">- Mark Twain</cite></blockquote>
-                        <blockquote class="bg-slate-800 p-4 rounded-lg border-l-4 border-blue-500">"It does not matter how slowly you go as long as you do not stop." <cite class="block text-right text-sm text-slate-400 mt-2">- Confucius</cite></blockquote>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div id="motivationPage" class="page"></div>
 
         <!-- ===== Settings Page ===== -->
         <div id="settingsPage" class="page">
             <header class="mb-6">
-                <h1 class="text-3xl font-bold text-slate-100">সেটিংস</h1>
-                <p class="text-slate-400">আপনার ট্র্যাকারগুলো কনফিগার করুন</p>
+                <h1 data-lang-key="settings_title" class="text-3xl font-bold text-slate-100">সেটিংস</h1>
+                <p data-lang-key="settings_subtitle" class="text-slate-400">অ্যাপটি নিজের মতো সাজান</p>
             </header>
-            <div id="settingsContainer" class="space-y-6">
-                <!-- Settings forms will be injected here -->
-            </div>
-            <div class="mt-8 bg-red-900/50 p-4 rounded-xl border border-red-700">
-                <h3 class="text-lg font-semibold text-red-400 mb-2">বিপদজনক এলাকা</h3>
-                <p class="text-sm text-slate-400 mb-4">সাবধান! এটি আপনার সকল সেভ করা ডেটা মুছে ফেলবে।</p>
-                <button id="resetDataButton" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-md shadow-lg transform transition-transform duration-200 active:scale-95 focus:outline-none">
-                    সব ডেটা রিসেট করুন
-                </button>
-            </div>
+            <div id="settingsContainer" class="space-y-6"></div>
         </div>
     </main>
 
     <!-- Bottom Navigation & Floating Action Button -->
     <div class="fixed bottom-0 left-0 right-0 h-20">
         <div class="relative h-full">
-            <!-- Floating Action Button -->
             <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
                 <button id="addEntryBtn" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg transform transition-transform active:scale-90">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 </button>
             </div>
-
-            <!-- Navigation Bar -->
             <nav class="absolute bottom-0 left-0 right-0 bg-slate-800/80 backdrop-blur-sm border-t border-slate-700 grid grid-cols-5 items-center h-16 z-10">
-                <button data-page="dashboardPage" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-colors duration-300 active">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                    <span class="text-xs mt-1">ড্যাশবোর্ড</span>
-                </button>
-                <button data-page="statsPage" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-colors duration-300">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    <span class="text-xs mt-1">পরিসংখ্যান</span>
-                </button>
+                <button data-page="dashboardPage" class="nav-btn flex flex-col items-center justify-center text-slate-400 active"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg><span data-lang-key="nav_dashboard" class="text-xs mt-1">ড্যাশবোর্ড</span></button>
+                <button data-page="insightsPage" class="nav-btn flex flex-col items-center justify-center text-slate-400"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg><span data-lang-key="nav_insights" class="text-xs mt-1">ইনসাইট</span></button>
                 <div class="w-full"></div>
-                <!-- Spacer for FAB -->
-                <button data-page="motivationPage" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-colors duration-300">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-                    <span class="text-xs mt-1">অনুপ্রেরণা</span>
-                </button>
-                <button data-page="settingsPage" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-colors duration-300">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    <span class="text-xs mt-1">সেটিংস</span>
-                </button>
+                <button data-page="motivationPage" class="nav-btn flex flex-col items-center justify-center text-slate-400"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg><span data-lang-key="nav_motivation" class="text-xs mt-1">অনুপ্রেরণা</span></button>
+                <button data-page="settingsPage" class="nav-btn flex flex-col items-center justify-center text-slate-400"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span data-lang-key="nav_settings" class="text-xs mt-1">সেটিংস</span></button>
             </nav>
         </div>
     </div>
 
     <!-- Add Entry Modal -->
     <div id="addEntryModal" class="fixed inset-0 modal-bg flex items-center justify-center z-50 hidden">
-        <div class="bg-slate-800 rounded-2xl shadow-xl p-6 w-11/12 max-w-sm text-center">
-            <h2 class="text-2xl font-bold mb-4">লগ করুন</h2>
-            <p class="text-slate-400 mb-6">কোন অভ্যাসটি আপনি এখন লগ করতে চান?</p>
-            <div id="modalTrackerList" class="space-y-3">
-                <!-- Modal buttons populated by JS -->
-            </div>
-            <button id="closeModalBtn" class="mt-6 bg-slate-700 hover:bg-slate-600 text-slate-300 font-semibold py-2 px-4 rounded-lg w-full">বন্ধ করুন</button>
+        <div class="bg-slate-800 rounded-2xl shadow-xl p-6 w-11/12 max-w-sm">
+            <h2 data-lang-key="modal_log_title" class="text-2xl font-bold mb-2 text-center">লগ করুন</h2>
+            <div id="modalTrackerList" class="space-y-3 my-4"></div>
+            <textarea id="entryNote" data-lang-key-placeholder="note_placeholder" class="w-full bg-slate-700 p-2 rounded-md h-20 text-sm" placeholder="একটি নোট যোগ করুন (ঐচ্ছিক)..."></textarea>
+            <button id="saveEntryBtn" data-lang-key="save_button" class="mt-4 w-full font-bold py-3 px-4 rounded-md text-white bg-blue-600 hover:bg-blue-700">সংরক্ষণ করুন</button>
+            <button id="closeModalBtn" data-lang-key="close_button" class="mt-2 text-slate-400 text-sm w-full py-1">বন্ধ করুন</button>
         </div>
     </div>
 
+    <!-- Achievement Unlocked Toast -->
+    <div id="toast" class="fixed top-5 right-5 bg-gradient-to-r from-green-400 to-blue-500 text-white p-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-500 z-50"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-                    // --- STATE & DATA STRUCTURE ---
+                    // --- DICTIONARY FOR BILINGUAL SUPPORT ---
+                    const strings = {
+                        dashboard_title: {
+                            bn: 'ড্যাশবোর্ড',
+                            en: 'Dashboard'
+                        },
+                        dashboard_subtitle: {
+                            bn: 'আপনার অভ্যাসের সারসংক্ষেপ',
+                            en: 'A summary of your habits'
+                        },
+                        insights_title: {
+                            bn: 'ইনসাইট',
+                            en: 'Insights'
+                        },
+                        insights_subtitle: {
+                            bn: 'আপনার অগ্রগতি ও অর্জন',
+                            en: 'Your progress & achievements'
+                        },
+                        motivation_title: {
+                            bn: 'অনুপ্রেরণা',
+                            en: 'Motivation'
+                        },
+                        motivation_subtitle: {
+                            bn: 'কঠিন সময়ে আপনার সঙ্গী',
+                            en: 'Your companion in tough times'
+                        },
+                        settings_title: {
+                            bn: 'সেটিংস',
+                            en: 'Settings'
+                        },
+                        settings_subtitle: {
+                            bn: 'অ্যাপটি নিজের মতো সাজান',
+                            en: 'Customize the app for you'
+                        },
+                        nav_dashboard: {
+                            bn: 'ড্যাশবোর্ড',
+                            en: 'Dashboard'
+                        },
+                        nav_insights: {
+                            bn: 'ইনসাইট',
+                            en: 'Insights'
+                        },
+                        nav_motivation: {
+                            bn: 'অনুপ্রেরণা',
+                            en: 'Motivation'
+                        },
+                        nav_settings: {
+                            bn: 'সেটিংস',
+                            en: 'Settings'
+                        },
+                        modal_log_title: {
+                            bn: 'লগ করুন',
+                            en: 'Log an Entry'
+                        },
+                        note_placeholder: {
+                            bn: 'একটি নোট যোগ করুন (ঐচ্ছিক)...',
+                            en: 'Add a note (optional)...'
+                        },
+                        save_button: {
+                            bn: 'সংরক্ষণ করুন',
+                            en: 'Save Entry'
+                        },
+                        close_button: {
+                            bn: 'বন্ধ করুন',
+                            en: 'Close'
+                        },
+                        timer_start: {
+                            bn: 'এখনই শুরু করুন!',
+                            en: 'Start now!'
+                        },
+                        timer_prefix: {
+                            bn: 'শেষবার থেকে বিরত',
+                            en: 'Abstinent For'
+                        },
+                        today_count_label: {
+                            bn: 'আজকের গণনা',
+                            en: 'Today\'s Count'
+                        },
+                        total_count_label: {
+                            bn: 'সর্বমোট গণনা',
+                            en: 'Total Count'
+                        },
+                        money_saved_label: {
+                            bn: 'আনুমানিক সঞ্চয়',
+                            en: 'Est. Money Saved'
+                        },
+                        tab_charts: {
+                            bn: 'চার্ট',
+                            en: 'Charts'
+                        },
+                        tab_history: {
+                            bn: 'ইতিহাস',
+                            en: 'History'
+                        },
+                        tab_achievements: {
+                            bn: 'অর্জন',
+                            en: 'Achievements'
+                        },
+                        history_empty: {
+                            bn: 'এখনো কোনো ইতিহাস নেই।',
+                            en: 'No history yet.'
+                        },
+                        settings_daily_limit: {
+                            bn: 'দৈনিক লক্ষ্য',
+                            en: 'Daily Limit'
+                        },
+                        settings_old_avg: {
+                            bn: 'পূর্বের গড় ব্যবহার (দৈনিক)',
+                            en: 'Previous Daily Average'
+                        },
+                        settings_cost: {
+                            bn: 'প্যাকেট/লিকুইডের দাম (৳)',
+                            en: 'Cost of Pack/Liquid (BDT)'
+                        },
+                        settings_units: {
+                            bn: 'প্রতি প্যাকেটে ইউনিট সংখ্যা',
+                            en: 'Units per Pack'
+                        },
+                        settings_save_btn: {
+                            bn: 'সেভ করুন',
+                            en: 'Save Settings'
+                        },
+                        settings_lang_label: {
+                            bn: 'ভাষা পরিবর্তন',
+                            en: 'Change Language'
+                        },
+                        settings_export_title: {
+                            bn: 'ডেটা ম্যানেজমেন্ট',
+                            en: 'Data Management'
+                        },
+                        settings_export_subtitle: {
+                            bn: 'আপনার সকল ডেটার ব্যাকআপ নিন।',
+                            en: 'Backup all your data.'
+                        },
+                        settings_export_btn: {
+                            bn: 'ডেটা এক্সপোর্ট করুন',
+                            en: 'Export Data'
+                        },
+                        settings_danger_zone: {
+                            bn: 'বিপদজনক এলাকা',
+                            en: 'Danger Zone'
+                        },
+                        settings_reset_subtitle: {
+                            bn: 'সাবধান! এটি আপনার সকল সেভ করা ডেটা মুছে ফেলবে।',
+                            en: 'Warning! This will erase all your saved data.'
+                        },
+                        settings_reset_btn: {
+                            bn: 'সব ডেটা রিসেট করুন',
+                            en: 'Reset All Data'
+                        },
+                        confirm_reset: {
+                            bn: 'আপনি কি নিশ্চিত যে আপনার সমস্ত ডেটা মুছে ফেলতে চান? এটি আর ফেরানো যাবে না।',
+                            en: 'Are you sure you want to delete all your data? This action cannot be undone.'
+                        },
+                        achievement_unlocked: {
+                            bn: 'অর্জন আনলকড!',
+                            en: 'Achievement Unlocked!'
+                        },
+                        motivation_tips_title: {
+                            bn: 'তাৎক্ষণিক করণীয়',
+                            en: 'Quick Tips'
+                        },
+                        motivation_quotes_title: {
+                            bn: 'অনুপ্রেরণামূলক উক্তি',
+                            en: 'Motivational Quotes'
+                        },
+                        tip1: {
+                            bn: '<strong>গভীর শ্বাস নিন:</strong> ৫ সেকেন্ড শ্বাস নিন, ধরে রাখুন, এবং ৭ সেকেন্ড ধরে ছাড়ুন। এটি আপনার মনকে শান্ত করবে।',
+                            en: '<strong>Deep Breath:</strong> Inhale for 5 seconds, hold, and exhale for 7 seconds. It will calm your mind.'
+                        },
+                        tip2: {
+                            bn: '<strong>পানি পান করুন:</strong> এক গ্লাস ঠান্ডা পানি পান করুন। এটি আপনার মনোযোগ অন্যদিকে সরাবে।',
+                            en: '<strong>Drink Water:</strong> Drink a glass of cold water. It will distract your attention.'
+                        },
+                        tip3: {
+                            bn: '<strong>একটু হেঁটে আসুন:</strong> ৫-১০ মিনিটের জন্য বাইরে বা ঘরের ভেতরেই একটু হাঁটুন। শারীরিক নড়াচড়া মানসিক চাপ কমায়।',
+                            en: '<strong>Take a Walk:</strong> Walk outside or even inside for 5-10 minutes. Physical movement reduces stress.'
+                        },
+                        tip4: {
+                            bn: '<strong>মনোযোগ সরান:</strong> গান শুনুন, কোনো বন্ধুকে ফোন দিন বা আপনার পছন্দের কোনো কাজ করুন।',
+                            en: '<strong>Distract Yourself:</strong> Listen to music, call a friend, or do something you enjoy.'
+                        },
+                        tip5: {
+                            bn: '<strong>লক্ষ্য মনে করুন:</strong> ভাবুন, কেন আপনি এই অভ্যাসটি ছাড়তে চেয়েছিলেন। আপনার চূড়ান্ত লক্ষ্য আপনাকে শক্তি জোগাবে।',
+                            en: '<strong>Remember Your Goal:</strong> Think about why you wanted to quit this habit. Your ultimate goal will give you strength.'
+                        },
+                        quote1: {
+                            bn: '"এগিয়ে যাওয়ার মূল রহস্য হলো শুরু করা।" <cite class="block text-right text-sm text-slate-400 mt-2">- মার্ক টোয়েন</cite>',
+                            en: '"The secret of getting ahead is getting started." <cite class="block text-right text-sm text-slate-400 mt-2">- Mark Twain</cite>'
+                        },
+                        quote2: {
+                            bn: '"যতক্ষণ আপনি থামছেন না, ততক্ষণ কত ধীরে এগোচ্ছেন সেটা কোনো বিষয় নয়।" <cite class="block text-right text-sm text-slate-400 mt-2">- কনফুসিয়াস</cite>',
+                            en: '"It does not matter how slowly you go as long as you do not stop." <cite class="block text-right text-sm text-slate-400 mt-2">- Confucius</cite>'
+                        },
+                    };
+                    let currentLang = 'bn';
+
                     let appData = {};
                     let mainChartInstance = null;
                     let timerIntervals = {};
+                    let selectedTrackerForModal = null;
 
                     const defaultData = {
+                        settings: {
+                            language: 'bn'
+                        },
                         trackers: {
                             vape: {
                                 id: 'vape',
@@ -259,7 +393,10 @@
                                     oldAvg: 60,
                                     cost: 500,
                                     units: 1500,
-                                    unitName: 'পাফ'
+                                    unitName: {
+                                        bn: 'পাফ',
+                                        en: 'Puffs'
+                                    }
                                 }
                             },
                             cigarette: {
@@ -273,7 +410,10 @@
                                     oldAvg: 20,
                                     cost: 300,
                                     units: 20,
-                                    unitName: 'টি'
+                                    unitName: {
+                                        bn: 'টি',
+                                        en: 'Sticks'
+                                    }
                                 }
                             },
                             urge: {
@@ -287,10 +427,53 @@
                                     oldAvg: 5,
                                     cost: 0,
                                     units: 0,
-                                    unitName: 'বার'
+                                    unitName: {
+                                        bn: 'বার',
+                                        en: 'Times'
+                                    }
                                 }
                             }
+                        },
+                        achievements: {
+                            vape: {},
+                            cigarette: {},
+                            urge: {}
                         }
+                    };
+
+                    const achievementConfig = {
+                        '1d_free': {
+                            name: {
+                                en: '24 Hours Free',
+                                bn: '২৪ ঘণ্টা মুক্ত'
+                            },
+                            icon: '🥉',
+                            duration: 24 * 3600 * 1000
+                        },
+                        '3d_free': {
+                            name: {
+                                en: '3 Days Strong',
+                                bn: '৩ দিন শক্তিশালী'
+                            },
+                            icon: '🥉',
+                            duration: 3 * 24 * 3600 * 1000
+                        },
+                        '7d_free': {
+                            name: {
+                                en: '1 Week Milestone',
+                                bn: '১ সপ্তাহের মাইলফলক'
+                            },
+                            icon: '🥈',
+                            duration: 7 * 24 * 3600 * 1000
+                        },
+                        '30d_free': {
+                            name: {
+                                en: '1 Month Champion',
+                                bn: '১ মাসের চ্যাম্পিয়ন'
+                            },
+                            icon: '🥇',
+                            duration: 30 * 24 * 3600 * 1000
+                        },
                     };
 
                     // --- DOM ELEMENTS ---
@@ -299,58 +482,111 @@
                     const addEntryBtn = document.getElementById('addEntryBtn');
                     const addEntryModal = document.getElementById('addEntryModal');
                     const closeModalBtn = document.getElementById('closeModalBtn');
-                    const langBnBtn = document.getElementById('langBnBtn');
-                    const langEnBtn = document.getElementById('langEnBtn');
-                    const motivationContentBn = document.getElementById('motivationContentBn');
-                    const motivationContentEn = document.getElementById('motivationContentEn');
+                    const saveEntryBtn = document.getElementById('saveEntryBtn');
+                    const entryNote = document.getElementById('entryNote');
+                    const insightsTabButtons = document.querySelectorAll('.insights-tab-btn');
+                    const insightsTabContents = document.querySelectorAll('.insights-tab-content');
+                    const toastEl = document.getElementById('toast');
 
-
-                    // --- DATA HANDLING ---
                     const saveData = () => localStorage.setItem('lifeTrackProData', JSON.stringify(appData));
                     const loadData = () => {
                         const data = localStorage.getItem('lifeTrackProData');
-                        appData = data ? JSON.parse(data) : JSON.parse(JSON.stringify(defaultData)); // Deep copy
+                        appData = data ? JSON.parse(data) : JSON.parse(JSON.stringify(defaultData));
                     };
 
-                    // --- CORE LOGIC ---
-                    function logEntry(trackerId) {
-                        appData.trackers[trackerId].history.push(Date.now());
+                    function setLanguage(lang) {
+                        currentLang = lang;
+                        if (appData && appData.settings) {
+                            appData.settings.language = lang;
+                        }
                         saveData();
+                        document.documentElement.lang = lang;
+                        document.querySelectorAll('[data-lang-key]').forEach(el => {
+                            const key = el.dataset.langKey;
+                            if (strings[key] && strings[key][currentLang]) {
+                                el.innerHTML = strings[key][currentLang];
+                            }
+                        });
+                        document.querySelectorAll('[data-lang-key-placeholder]').forEach(el => {
+                            const key = el.dataset.langKeyPlaceholder;
+                            if (strings[key] && strings[key][currentLang]) {
+                                el.placeholder = strings[key][currentLang];
+                            }
+                        });
+                        const activePage = document.querySelector('.page.active').id;
+                        renderAllPages();
+                        switchPage(activePage, true); // force re-render
+                    }
+
+                    function logEntry(trackerId, note) {
+                        if (!trackerId) return;
+                        appData.trackers[trackerId].history.push({
+                            timestamp: Date.now(),
+                            note: note
+                        });
+                        saveData();
+                        checkAllAchievements();
                         renderDashboard();
                         closeModal();
                     }
 
-                    // --- RENDERING FUNCTIONS ---
+                    function checkAllAchievements() {
+                        Object.keys(appData.trackers).forEach(trackerId => {
+                            const tracker = appData.trackers[trackerId];
+                            const history = tracker.history;
+                            if (history.length === 0) return;
+                            const lastEntryTime = history[history.length - 1].timestamp;
+                            const timeSince = Date.now() - lastEntryTime;
+
+                            Object.keys(achievementConfig).forEach(achieveId => {
+                                const config = achievementConfig[achieveId];
+                                if (timeSince >= config.duration && !(appData.achievements[trackerId] && appData.achievements[trackerId][achieveId])) {
+                                    if (!appData.achievements[trackerId]) appData.achievements[trackerId] = {};
+                                    appData.achievements[trackerId][achieveId] = true;
+                                    saveData();
+                                    const unlockedText = strings['achievement_unlocked'][currentLang];
+                                    showToast(`${unlockedText}<br>${tracker.name}: ${config.name[currentLang]}`);
+                                }
+                            });
+                        });
+                    }
+
+                    function renderAllPages() {
+                        renderMotivationPage();
+                        renderSettingsPage();
+                    }
+
                     function renderDashboard() {
                         const grid = document.getElementById('dashboardGrid');
                         grid.innerHTML = '';
                         Object.values(appData.trackers).forEach(tracker => {
                             const todayStart = new Date().setHours(0, 0, 0, 0);
-                            const countToday = tracker.history.filter(ts => ts >= todayStart).length;
-                            const lastEntry = tracker.history.length > 0 ? tracker.history[tracker.history.length - 1] : null;
+                            const countToday = tracker.history.filter(entry => entry.timestamp >= todayStart).length;
+                            const lastEntry = tracker.history.length > 0 ? tracker.history[tracker.history.length - 1].timestamp : null;
+                            const unitName = tracker.settings.unitName[currentLang] || tracker.settings.unitName['en'];
 
                             const card = document.createElement('div');
                             card.className = `p-4 rounded-xl shadow-lg text-white ${tracker.gradient}`;
                             card.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h2 class="text-xl font-bold">${tracker.name}</h2>
-                                <p class="text-sm opacity-80">আজ: <strong>${countToday} / ${tracker.settings.dailyLimit}</strong> ${tracker.settings.unitName}</p>
-                            </div>
-                            <div class="p-2 bg-white/20 rounded-lg">${tracker.icon}</div>
-                        </div>
-                        <div class="mt-4 text-center">
-                            <p class="text-sm opacity-80">শেষবার থেকে বিরত</p>
-                            <p id="timer-${tracker.id}" class="text-2xl font-semibold">শুরু করুন!</p>
-                        </div>
-                    `;
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-xl font-bold">${tracker.name}</h2>
+                        <p class="text-sm opacity-80">${strings['today_count_label'][currentLang]}: <strong>${countToday} / ${tracker.settings.dailyLimit}</strong> ${unitName}</p>
+                    </div>
+                    <div class="p-2 bg-white/20 rounded-lg">${tracker.icon}</div>
+                </div>
+                <div class="mt-4 text-center">
+                    <p class="text-sm opacity-80">${strings['timer_prefix'][currentLang]}</p>
+                    <p id="timer-${tracker.id}" class="text-2xl font-semibold">${strings['timer_start'][currentLang]}</p>
+                </div>`;
                             grid.appendChild(card);
                             startTimer(tracker.id, lastEntry);
                         });
                     }
 
-                    function renderStatsPage(trackerId = 'vape') {
-                        const select = document.getElementById('statsTrackerSelect');
+                    function renderInsightsPage(trackerId) {
+                        const select = document.getElementById('insightsTrackerSelect');
+                        const currentSelection = trackerId || select.value || 'vape';
                         select.innerHTML = '';
                         Object.values(appData.trackers).forEach(tracker => {
                             const option = document.createElement('option');
@@ -358,10 +594,10 @@
                             option.textContent = tracker.name;
                             select.appendChild(option);
                         });
-                        select.value = trackerId;
+                        select.value = currentSelection;
 
-                        renderMainChart(trackerId);
-                        renderStatsSummary(trackerId);
+                        const activeTab = document.querySelector('.insights-tab-btn.active').dataset.tab;
+                        switchInsightsTab(activeTab, currentSelection);
                     }
 
                     function renderStatsSummary(trackerId) {
@@ -371,12 +607,12 @@
 
                         const totalEntries = history.length;
                         const todayStart = new Date().setHours(0, 0, 0, 0);
-                        const todayEntries = history.filter(t => t >= todayStart).length;
+                        const todayEntries = history.filter(e => e.timestamp >= todayStart).length;
 
                         let moneySaved = 0;
                         if (tracker.settings.cost > 0 && tracker.settings.units > 0) {
                             const costPerUnit = tracker.settings.cost / tracker.settings.units;
-                            const startDate = history.length > 0 ? new Date(history[0]) : new Date();
+                            const startDate = history.length > 0 ? new Date(history[0].timestamp) : new Date();
                             const days = Math.max(1, (Date.now() - startDate.getTime()) / (1000 * 3600 * 24));
                             const expectedEntries = Math.floor(days * tracker.settings.oldAvg);
                             const savedEntries = expectedEntries - totalEntries;
@@ -384,18 +620,17 @@
                         }
 
                         summaryEl.innerHTML = `
-                    <div class="bg-slate-800 p-3 rounded-lg"><p class="text-slate-400 text-sm">আজকের গণনা</p><p class="font-bold text-xl">${todayEntries}</p></div>
-                    <div class="bg-slate-800 p-3 rounded-lg"><p class="text-slate-400 text-sm">সর্বমোট গণনা</p><p class="font-bold text-xl">${totalEntries}</p></div>
-                    <div class="bg-slate-800 p-3 rounded-lg col-span-2"><p class="text-slate-400 text-sm">আনুমানিক সঞ্চয়</p><p class="font-bold text-xl text-green-400">৳${moneySaved}</p></div>
-                `;
+            <div class="bg-slate-800 p-3 rounded-lg"><p class="text-slate-400 text-sm">${strings.today_count_label[currentLang]}</p><p class="font-bold text-xl">${todayEntries}</p></div>
+            <div class="bg-slate-800 p-3 rounded-lg"><p class="text-slate-400 text-sm">${strings.total_count_label[currentLang]}</p><p class="font-bold text-xl">${totalEntries}</p></div>
+            <div class="bg-slate-800 p-3 rounded-lg col-span-2"><p class="text-slate-400 text-sm">${strings.money_saved_label[currentLang]}</p><p class="font-bold text-xl text-green-400">৳${moneySaved}</p></div>`;
                     }
 
                     function renderMainChart(trackerId) {
                         const tracker = appData.trackers[trackerId];
                         const ctx = document.getElementById('mainChart').getContext('2d');
 
-                        const dataPoints = tracker.history.reduce((acc, ts) => {
-                            const date = new Date(ts).setHours(0, 0, 0, 0);
+                        const dataPoints = tracker.history.reduce((acc, entry) => {
+                            const date = new Date(entry.timestamp).setHours(0, 0, 0, 0);
                             acc[date] = (acc[date] || 0) + 1;
                             return acc;
                         }, {});
@@ -409,7 +644,7 @@
                             data: {
                                 labels: labels,
                                 datasets: [{
-                                    label: `দৈনিক ${tracker.settings.unitName}`,
+                                    label: `${tracker.name} (${tracker.settings.unitName[currentLang]})`,
                                     data: data,
                                     backgroundColor: 'rgba(59, 130, 246, 0.5)',
                                     borderColor: 'rgba(59, 130, 246, 1)',
@@ -441,143 +676,266 @@
                         });
                     }
 
-                    function renderSettingsPage() {
-                        const container = document.getElementById('settingsContainer');
-                        container.innerHTML = '';
-                        Object.values(appData.trackers).forEach(tracker => {
-                                    const formHtml = `
-                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                            <h3 class="text-xl font-bold mb-4 ${tracker.gradient} bg-clip-text text-transparent">${tracker.name}</h3>
-                            <form class="space-y-3" data-tracker-id="${tracker.id}" onsubmit="handleSettingsSave(event)">
-                                <div>
-                                    <label class="text-sm text-slate-400">দৈনিক লক্ষ্য (${tracker.settings.unitName})</label>
-                                    <input type="number" name="dailyLimit" value="${tracker.settings.dailyLimit}" class="w-full bg-slate-700 p-2 rounded-md">
-                                </div>
-                                ${tracker.settings.cost > 0 ? `
-                                <div>
-                                    <label class="text-sm text-slate-400">পূর্বের গড় ব্যবহার (দৈনিক)</label>
-                                    <input type="number" name="oldAvg" value="${tracker.settings.oldAvg}" class="w-full bg-slate-700 p-2 rounded-md">
-                                </div>
-                                <div>
-                                    <label class="text-sm text-slate-400">প্যাকেট/লিকুইডের দাম (৳)</label>
-                                    <input type="number" name="cost" value="${tracker.settings.cost}" class="w-full bg-slate-700 p-2 rounded-md">
-                                </div>
-                                <div>
-                                    <label class="text-sm text-slate-400">প্রতি প্যাকেটে ইউনিট সংখ্যা</label>
-                                    <input type="number" name="units" value="${tracker.settings.units}" class="w-full bg-slate-700 p-2 rounded-md">
-                                </div>` : ''}
-                                <button type="submit" class="w-full font-bold py-2 px-4 rounded-md text-white ${tracker.gradient}">সেভ করুন</button>
-                            </form>
-                        </div>
-                    `;
-                    container.innerHTML += formHtml;
-                });
-            }
-            window.handleSettingsSave = function(event) {
-                event.preventDefault();
-                const form = event.target;
-                const trackerId = form.dataset.trackerId;
-                const tracker = appData.trackers[trackerId];
-                
-                tracker.settings.dailyLimit = parseInt(form.elements.dailyLimit.value);
-                if(form.elements.oldAvg) tracker.settings.oldAvg = parseInt(form.elements.oldAvg.value);
-                if(form.elements.cost) tracker.settings.cost = parseFloat(form.elements.cost.value);
-                if(form.elements.units) tracker.settings.units = parseInt(form.elements.units.value);
-                
-                saveData();
-                alert(`${tracker.name} সেটিংস সেভ হয়েছে!`);
-                renderDashboard();
-            }
+                    function renderHistory(trackerId) {
+                        const history = appData.trackers[trackerId].history.slice().reverse();
+                        const container = document.getElementById('historyTab');
+                        if (history.length === 0) {
+                            container.innerHTML = `<p class="text-slate-400 text-center">${strings.history_empty[currentLang]}</p>`;
+                            return;
+                        }
+                        container.innerHTML = history.map(entry => `
+            <div class="bg-slate-800 p-3 rounded-lg">
+                <p class="font-semibold">${new Date(entry.timestamp).toLocaleString()}</p>
+                ${entry.note ? `<p class="text-sm text-slate-300 mt-1 pl-2 border-l-2 border-slate-600">${entry.note}</p>` : ''}
+            </div>
+        `).join('');
+    }
 
-            // --- UTILITY FUNCTIONS ---
-            function startTimer(trackerId, lastEntry) {
-                if (timerIntervals[trackerId]) clearInterval(timerIntervals[trackerId]);
-                const timerEl = document.getElementById(`timer-${trackerId}`);
-                if (!timerEl) return;
-
-                function update() {
-                    if (!lastEntry) {
-                        timerEl.textContent = 'এখনই শুরু করুন!';
-                        return;
-                    }
-                    const diff = Date.now() - lastEntry;
-                    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-                    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    const s = Math.floor((diff % (1000 * 60)) / 1000);
-                    timerEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
-                }
-                update();
-                timerIntervals[trackerId] = setInterval(update, 1000);
-            }
-
-            function switchPage(pageId) {
-                pages.forEach(p => p.classList.toggle('active', p.id === pageId));
-                navButtons.forEach(b => b.classList.toggle('active', b.dataset.page === pageId));
-
-                if(pageId === 'dashboardPage') renderDashboard();
-                if(pageId === 'statsPage') renderStatsPage();
-                if(pageId === 'settingsPage') renderSettingsPage();
-            }
-
-            function openModal() {
-                const list = document.getElementById('modalTrackerList');
-                list.innerHTML = '';
-                Object.values(appData.trackers).forEach(tracker => {
-                    const button = document.createElement('button');
-                    button.className = `w-full text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center ${tracker.gradient}`;
-                    button.innerHTML = `${tracker.icon} <span class="ml-2">${tracker.name}</span>`;
-                    button.onclick = () => logEntry(tracker.id);
-                    list.appendChild(button);
-                });
-                addEntryModal.classList.remove('hidden');
-            }
-            function closeModal() {
-                addEntryModal.classList.add('hidden');
-            }
-            
-            // --- EVENT LISTENERS ---
-            navButtons.forEach(btn => btn.addEventListener('click', () => switchPage(btn.dataset.page)));
-            addEntryBtn.addEventListener('click', openModal);
-            closeModalBtn.addEventListener('click', closeModal);
-            addEntryModal.addEventListener('click', (event) => {
-                if (event.target.id === 'addEntryModal') {
-                    closeModal();
-                }
-            });
-            document.getElementById('statsTrackerSelect').addEventListener('change', (e) => {
-                renderMainChart(e.target.value);
-                renderStatsSummary(e.target.value);
-            });
-            document.getElementById('resetDataButton').addEventListener('click', () => {
-                if(confirm('আপনি কি নিশ্চিত যে আপনার সমস্ত ডেটা মুছে ফেলতে চান? এটি আর ফেরানো যাবে না।')){
-                    appData = JSON.parse(JSON.stringify(defaultData));
-                    saveData();
-                    switchPage('dashboardPage');
-                }
-            });
-
-            langBnBtn.addEventListener('click', () => {
-                motivationContentBn.classList.remove('hidden');
-                motivationContentEn.classList.add('hidden');
-                langBnBtn.classList.add('active');
-                langEnBtn.classList.remove('active');
-            });
-            langEnBtn.addEventListener('click', () => {
-                motivationContentBn.classList.add('hidden');
-                motivationContentEn.classList.remove('hidden');
-                langBnBtn.classList.remove('active');
-                langEnBtn.classList.add('active');
-            });
-
-            // --- INITIALIZATION ---
-            function initializeApp() {
-                loadData();
-                switchPage('dashboardPage');
-            }
-            
-            initializeApp();
+    function renderAchievements(trackerId) {
+        const container = document.getElementById('achievementsTab');
+        container.innerHTML = '';
+        Object.keys(achievementConfig).forEach(achieveId => {
+            const config = achievementConfig[achieveId];
+            const isUnlocked = appData.achievements[trackerId] && appData.achievements[trackerId][achieveId];
+            const card = document.createElement('div');
+            card.className = `bg-slate-800 p-4 rounded-lg text-center flex flex-col items-center justify-center transition-all ${!isUnlocked ? 'achievement-locked' : ''}`;
+            card.innerHTML = `
+                <div class="text-4xl mb-2">${config.icon}</div>
+                <p class="font-semibold text-sm">${config.name[currentLang]}</p>
+            `;
+            container.appendChild(card);
         });
+    }
+    
+    function renderMotivationPage() {
+        const container = document.getElementById('motivationPage');
+        container.innerHTML = `
+            <header class="mb-6">
+                <h1 data-lang-key="motivation_title" class="text-3xl font-bold text-slate-100">${strings.motivation_title[currentLang]}</h1>
+                <p data-lang-key="motivation_subtitle" class="text-slate-400">${strings.motivation_subtitle[currentLang]}</p>
+            </header>
+            <div class="space-y-6">
+                <div>
+                    <h2 data-lang-key="motivation_tips_title" class="text-xl font-bold text-blue-400 mb-3">${strings.motivation_tips_title[currentLang]}</h2>
+                    <div class="space-y-3">
+                        <div class="bg-slate-800 p-4 rounded-lg" data-lang-key="tip1">${strings.tip1[currentLang]}</div>
+                        <div class="bg-slate-800 p-4 rounded-lg" data-lang-key="tip2">${strings.tip2[currentLang]}</div>
+                        <div class="bg-slate-800 p-4 rounded-lg" data-lang-key="tip3">${strings.tip3[currentLang]}</div>
+                        <div class="bg-slate-800 p-4 rounded-lg" data-lang-key="tip4">${strings.tip4[currentLang]}</div>
+                        <div class="bg-slate-800 p-4 rounded-lg" data-lang-key="tip5">${strings.tip5[currentLang]}</div>
+                    </div>
+                </div>
+                <div>
+                    <h2 data-lang-key="motivation_quotes_title" class="text-xl font-bold text-blue-400 mb-3">${strings.motivation_quotes_title[currentLang]}</h2>
+                    <div class="space-y-3">
+                        <blockquote class="bg-slate-800 p-4 rounded-lg border-l-4 border-blue-500" data-lang-key="quote1">${strings.quote1[currentLang]}</blockquote>
+                        <blockquote class="bg-slate-800 p-4 rounded-lg border-l-4 border-blue-500" data-lang-key="quote2">${strings.quote2[currentLang]}</blockquote>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function renderSettingsPage() {
+        const container = document.getElementById('settingsContainer');
+        container.innerHTML = '';
+        
+        let settingsHtml = `<div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+            <h3 class="text-xl font-bold mb-4 text-slate-200" data-lang-key="settings_lang_label">${strings.settings_lang_label[currentLang]}</h3>
+            <div class="flex justify-center bg-slate-700 p-1 rounded-full w-fit mx-auto">
+                <button id="langBnBtn" class="lang-btn font-semibold px-6 py-2 rounded-full text-sm ${currentLang === 'bn' ? 'active' : ''}">বাংলা</button>
+                <button id="langEnBtn" class="lang-btn font-semibold px-6 py-2 rounded-full text-sm ${currentLang === 'en' ? 'active' : ''}">English</button>
+            </div>
+        </div>`;
+
+        Object.values(appData.trackers).forEach(tracker => {
+            const unitName = tracker.settings.unitName[currentLang] || tracker.settings.unitName['en'];
+            settingsHtml += `
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                    <h3 class="text-xl font-bold mb-4 ${tracker.gradient} bg-clip-text text-transparent">${tracker.name}</h3>
+                    <form class="space-y-3" data-tracker-id="${tracker.id}" onsubmit="handleSettingsSave(event)">
+                        <div>
+                            <label class="text-sm text-slate-400">${strings.settings_daily_limit[currentLang]} (${unitName})</label>
+                            <input type="number" name="dailyLimit" value="${tracker.settings.dailyLimit}" class="w-full bg-slate-700 p-2 rounded-md mt-1">
+                        </div>
+                        ${tracker.id !== 'urge' ? `
+                        <div>
+                            <label class="text-sm text-slate-400">${strings.settings_old_avg[currentLang]}</label>
+                            <input type="number" name="oldAvg" value="${tracker.settings.oldAvg}" class="w-full bg-slate-700 p-2 rounded-md mt-1">
+                        </div>
+                        <div>
+                            <label class="text-sm text-slate-400">${strings.settings_cost[currentLang]}</label>
+                            <input type="number" name="cost" value="${tracker.settings.cost}" class="w-full bg-slate-700 p-2 rounded-md mt-1">
+                        </div>
+                        <div>
+                            <label class="text-sm text-slate-400">${strings.settings_units[currentLang]}</label>
+                            <input type="number" name="units" value="${tracker.settings.units}" class="w-full bg-slate-700 p-2 rounded-md mt-1">
+                        </div>` : ''}
+                        <button type="submit" data-lang-key="settings_save_btn" class="w-full font-bold py-2 px-4 rounded-md text-white ${tracker.gradient}">${strings.settings_save_btn[currentLang]}</button>
+                    </form>
+                </div>`;
+        });
+        
+        settingsHtml += `
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                <h3 data-lang-key="settings_export_title" class="text-lg font-semibold text-green-400 mb-2">${strings.settings_export_title[currentLang]}</h3>
+                <p data-lang-key="settings_export_subtitle" class="text-sm text-slate-400 mb-4">${strings.settings_export_subtitle[currentLang]}</p>
+                <button id="exportDataButton" data-lang-key="settings_export_btn" class="w-full gradient-premium text-white font-bold py-3 px-4 rounded-md">${strings.settings_export_btn[currentLang]}</button>
+            </div>
+            <div class="bg-red-900/50 p-4 rounded-xl border border-red-700">
+                <h3 data-lang-key="settings_danger_zone" class="text-lg font-semibold text-red-400 mb-2">${strings.settings_danger_zone[currentLang]}</h3>
+                <p data-lang-key="settings_reset_subtitle" class="text-sm text-slate-400 mb-4">${strings.settings_reset_subtitle[currentLang]}</p>
+                <button id="resetDataButton" data-lang-key="settings_reset_btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-md">${strings.settings_reset_btn[currentLang]}</button>
+            </div>`;
+
+        container.innerHTML = settingsHtml;
+        
+        // Add event listeners for the newly created buttons
+        document.getElementById('langBnBtn').addEventListener('click', () => setLanguage('bn'));
+        document.getElementById('langEnBtn').addEventListener('click', () => setLanguage('en'));
+        document.getElementById('exportDataButton').addEventListener('click', exportData);
+        document.getElementById('resetDataButton').addEventListener('click', resetData);
+    }
+
+    window.handleSettingsSave = function(event) {
+        event.preventDefault();
+        const form = event.target;
+        const trackerId = form.dataset.trackerId;
+        const tracker = appData.trackers[trackerId];
+        
+        tracker.settings.dailyLimit = parseInt(form.elements.dailyLimit.value);
+        if(form.elements.oldAvg) tracker.settings.oldAvg = parseInt(form.elements.oldAvg.value);
+        if(form.elements.cost) tracker.settings.cost = parseFloat(form.elements.cost.value);
+        if(form.elements.units) tracker.settings.units = parseInt(form.elements.units.value);
+        
+        saveData();
+        alert(`${tracker.name} settings saved!`);
+        renderDashboard();
+    }
+    
+    function startTimer(trackerId, lastEntry) {
+        if (timerIntervals[trackerId]) clearInterval(timerIntervals[trackerId]);
+        const timerEl = document.getElementById(`timer-${trackerId}`);
+        if (!timerEl) return;
+
+        function update() {
+            if (!lastEntry) {
+                timerEl.textContent = strings['timer_start'][currentLang];
+                return;
+            }
+            const diff = Date.now() - lastEntry;
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+            timerEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
+        }
+        update();
+        timerIntervals[trackerId] = setInterval(update, 1000);
+    }
+    
+    function switchPage(pageId, forceRender = false) {
+        pages.forEach(p => p.classList.toggle('active', p.id === pageId));
+        navButtons.forEach(b => b.classList.toggle('active', b.dataset.page === pageId));
+        
+        if (pageId === 'dashboardPage' || forceRender) renderDashboard();
+        if (pageId === 'insightsPage' || forceRender) renderInsightsPage();
+        // Motivation and Settings are re-rendered on language change anyway
+    }
+
+    function switchInsightsTab(tabId, trackerId) {
+        insightsTabButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
+        insightsTabButtons.forEach(btn => btn.classList.toggle('text-slate-400', btn.dataset.tab !== tabId));
+        insightsTabContents.forEach(content => content.classList.toggle('hidden', content.id !== `${tabId}Tab`));
+        
+        if (tabId === 'charts') {
+            renderMainChart(trackerId);
+            renderStatsSummary(trackerId);
+        } else if (tabId === 'history') {
+            renderHistory(trackerId);
+        } else if (tabId === 'achievements') {
+            renderAchievements(trackerId);
+        }
+    }
+
+    function openModal() {
+        const list = document.getElementById('modalTrackerList');
+        list.innerHTML = '';
+        selectedTrackerForModal = null; // Reset selection
+
+        Object.values(appData.trackers).forEach(tracker => {
+            const button = document.createElement('button');
+            button.className = `w-full text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center border-2 border-transparent transition-all`;
+            button.innerHTML = `${tracker.icon} <span class="ml-2">${tracker.name}</span>`;
+            button.onclick = () => {
+                document.querySelectorAll('#modalTrackerList button').forEach(btn => {
+                    btn.classList.remove(...Object.values(appData.trackers).map(t => t.gradient), 'border-white');
+                    btn.style.background = '#475569';
+                });
+                button.classList.add(tracker.gradient, 'border-white');
+                button.style.background = '';
+                selectedTrackerForModal = tracker.id;
+            };
+            button.style.background = '#475569'; // Default bg
+            list.appendChild(button);
+        });
+        entryNote.value = '';
+        addEntryModal.classList.remove('hidden');
+    }
+    
+    function closeModal() {
+        addEntryModal.classList.add('hidden');
+    }
+    
+    function showToast(message) {
+        toastEl.innerHTML = message;
+        toastEl.classList.remove('translate-x-full');
+        setTimeout(() => {
+            toastEl.classList.add('translate-x-full');
+        }, 3000);
+    }
+
+    function exportData() {
+        const dataStr = JSON.stringify(appData, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        const exportFileDefaultName = 'lifetrack_pro_backup.json';
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    }
+    
+    function resetData() {
+        if(confirm(strings.confirm_reset[currentLang])){
+            localStorage.removeItem('lifeTrackProData');
+            loadData();
+            setLanguage('bn'); // Reset to default language
+            switchPage('dashboardPage');
+        }
+    }
+    
+    // --- EVENT LISTENERS ---
+    navButtons.forEach(btn => btn.addEventListener('click', () => switchPage(btn.dataset.page)));
+    addEntryBtn.addEventListener('click', openModal);
+    closeModalBtn.addEventListener('click', closeModal);
+    saveEntryBtn.addEventListener('click', () => logEntry(selectedTrackerForModal, entryNote.value));
+    
+    document.getElementById('insightsTrackerSelect').addEventListener('change', (e) => renderInsightsPage(e.target.value));
+    insightsTabButtons.forEach(btn => btn.addEventListener('click', () => {
+        const trackerId = document.getElementById('insightsTrackerSelect').value;
+        switchInsightsTab(btn.dataset.tab, trackerId);
+    }));
+
+    function initializeApp() {
+        loadData();
+        setLanguage((appData.settings && appData.settings.language) || 'bn');
+        renderAllPages();
+        switchPage('dashboardPage');
+        checkAllAchievements();
+    }
+    
+    initializeApp();
+    setInterval(checkAllAchievements, 60 * 1000); // Check for achievements every minute
+});
     </script>
 </body>
 

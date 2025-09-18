@@ -1,92 +1,41 @@
 <!DOCTYPE html>
 <html lang="bn">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LifeTrack Pro - Habit Tracker</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
-
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
+    
     <style>
-        html,
-        body {
+        html, body {
             font-family: 'Inter', sans-serif;
             -webkit-tap-highlight-color: transparent;
             scroll-behavior: smooth;
         }
-        
-        .page {
-            display: none;
-        }
-        
-        .page.active {
-            display: block;
-            animation: fadeIn 0.5s;
-        }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .gradient-vape {
-            background: linear-gradient(135deg, #3b82f6, #1e3a8a);
-        }
-        
-        .gradient-cigarette {
-            background: linear-gradient(135deg, #f59e0b, #b45309);
-        }
-        
-        .gradient-urge {
-            background: linear-gradient(135deg, #8b5cf6, #5b21b6);
-        }
-        
-        .gradient-premium {
-            background: linear-gradient(135deg, #10b981, #047857);
-        }
-        
-        .nav-btn.active svg,
-        .nav-btn.active span {
-            color: #60a5fa;
-            font-weight: 600;
-        }
-        
-        .modal-bg {
-            background-color: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-        }
-        
-        .lang-btn.active {
-            background-color: #3b82f6;
-            color: white;
-        }
-        
-        .tab-btn.active {
-            color: #3b82f6;
-            border-color: #3b82f6;
-        }
-        
-        .achievement-locked {
-            filter: grayscale(100%);
-            opacity: 0.5;
-        }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .gradient-vape { background: linear-gradient(135deg, #3b82f6, #1e3a8a); }
+        .gradient-cigarette { background: linear-gradient(135deg, #f59e0b, #b45309); }
+        .gradient-urge { background: linear-gradient(135deg, #8b5cf6, #5b21b6); }
+        .gradient-premium { background: linear-gradient(135deg, #10b981, #047857); }
+
+        .nav-btn.active svg, .nav-btn.active span { color: #60a5fa; font-weight: 600; }
+        .modal-bg { background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); }
+        .lang-btn.active { background-color: #3b82f6; color: white; }
+        .tab-btn.active { color: #3b82f6; border-color: #3b82f6; }
+        .achievement-locked { filter: grayscale(100%); opacity: 0.5; }
     </style>
 </head>
-
 <body class="bg-slate-900 text-white min-h-screen flex flex-col">
 
     <!-- Main Content Area -->
@@ -114,14 +63,14 @@
             <div class="mb-4 border-b border-slate-700 flex">
                 <button data-tab="charts" data-lang-key="tab_charts" class="tab-btn insights-tab-btn active flex-1 py-2 font-semibold border-b-2 transition-colors">চার্ট</button>
                 <button data-tab="history" data-lang-key="tab_history" class="tab-btn insights-tab-btn flex-1 py-2 font-semibold border-b-2 border-transparent text-slate-400 transition-colors">ইতিহাস</button>
-              <!--  <button data-tab="achievements" data-lang-key="tab_achievements" class="tab-btn insights-tab-btn flex-1 py-2 font-semibold border-b-2 border-transparent text-slate-400 transition-colors">অর্জন</button>-->
+                <button data-tab="achievements" data-lang-key="tab_achievements" class="tab-btn insights-tab-btn flex-1 py-2 font-semibold border-b-2 border-transparent text-slate-400 transition-colors">অর্জন</button>
             </div>
-
+            
             <div id="chartsTab" class="insights-tab-content">
                 <div class="bg-slate-800 p-4 rounded-xl shadow-lg">
                     <canvas id="mainChart"></canvas>
                 </div>
-                <div id="statsSummary" class="mt-4 grid grid-cols-2 gap-4 text-center"></div>
+                 <div id="statsSummary" class="mt-4 grid grid-cols-2 gap-4 text-center"></div>
             </div>
 
             <div id="historyTab" class="insights-tab-content hidden space-y-3"></div>
@@ -158,7 +107,7 @@
             </nav>
         </div>
     </div>
-
+    
     <!-- Add Entry Modal -->
     <div id="addEntryModal" class="fixed inset-0 modal-bg flex items-center justify-center z-50 hidden">
         <div class="bg-slate-800 rounded-2xl shadow-xl p-6 w-11/12 max-w-sm">
@@ -174,400 +123,194 @@
     <div id="toast" class="fixed top-5 right-5 bg-gradient-to-r from-green-400 to-blue-500 text-white p-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-500 z-50"></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-                    // --- DICTIONARY FOR BILINGUAL SUPPORT ---
-                    const strings = {
-                        dashboard_title: {
-                            bn: 'ড্যাশবোর্ড',
-                            en: 'Dashboard'
-                        },
-                        dashboard_subtitle: {
-                            bn: 'আপনার অভ্যাসের সারসংক্ষেপ',
-                            en: 'A summary of your habits'
-                        },
-                        insights_title: {
-                            bn: 'ইনসাইট',
-                            en: 'Insights'
-                        },
-                        insights_subtitle: {
-                            bn: 'আপনার অগ্রগতি ও অর্জন',
-                            en: 'Your progress & achievements'
-                        },
-                        motivation_title: {
-                            bn: 'অনুপ্রেরণা',
-                            en: 'Motivation'
-                        },
-                        motivation_subtitle: {
-                            bn: 'কঠিন সময়ে আপনার সঙ্গী',
-                            en: 'Your companion in tough times'
-                        },
-                        settings_title: {
-                            bn: 'সেটিংস',
-                            en: 'Settings'
-                        },
-                        settings_subtitle: {
-                            bn: 'অ্যাপটি নিজের মতো সাজান',
-                            en: 'Customize the app for you'
-                        },
-                        nav_dashboard: {
-                            bn: 'ড্যাশবোর্ড',
-                            en: 'Dashboard'
-                        },
-                        nav_insights: {
-                            bn: 'ইনসাইট',
-                            en: 'Insights'
-                        },
-                        nav_motivation: {
-                            bn: 'অনুপ্রেরণা',
-                            en: 'Motivation'
-                        },
-                        nav_settings: {
-                            bn: 'সেটিংস',
-                            en: 'Settings'
-                        },
-                        modal_log_title: {
-                            bn: 'লগ করুন',
-                            en: 'Log an Entry'
-                        },
-                        note_placeholder: {
-                            bn: 'একটি নোট যোগ করুন (ঐচ্ছিক)...',
-                            en: 'Add a note (optional)...'
-                        },
-                        save_button: {
-                            bn: 'সংরক্ষণ করুন',
-                            en: 'Save Entry'
-                        },
-                        close_button: {
-                            bn: 'বন্ধ করুন',
-                            en: 'Close'
-                        },
-                        timer_start: {
-                            bn: 'এখনই শুরু করুন!',
-                            en: 'Start now!'
-                        },
-                        timer_prefix: {
-                            bn: 'শেষবার থেকে বিরত',
-                            en: 'Abstinent For'
-                        },
-                        today_count_label: {
-                            bn: 'আজকের গণনা',
-                            en: 'Today\'s Count'
-                        },
-                        total_count_label: {
-                            bn: 'সর্বমোট গণনা',
-                            en: 'Total Count'
-                        },
-                        money_saved_label: {
-                            bn: 'আনুমানিক সঞ্চয়',
-                            en: 'Est. Money Saved'
-                        },
-                        tab_charts: {
-                            bn: 'চার্ট',
-                            en: 'Charts'
-                        },
-                        tab_history: {
-                            bn: 'ইতিহাস',
-                            en: 'History'
-                        },
-                        tab_achievements: {
-                            bn: 'অর্জন',
-                            en: 'Achievements'
-                        },
-                        history_empty: {
-                            bn: 'এখনো কোনো ইতিহাস নেই।',
-                            en: 'No history yet.'
-                        },
-                        settings_daily_limit: {
-                            bn: 'দৈনিক লক্ষ্য',
-                            en: 'Daily Limit'
-                        },
-                        settings_old_avg: {
-                            bn: 'পূর্বের গড় ব্যবহার (দৈনিক)',
-                            en: 'Previous Daily Average'
-                        },
-                        settings_cost: {
-                            bn: 'প্যাকেট/লিকুইডের দাম (৳)',
-                            en: 'Cost of Pack/Liquid (BDT)'
-                        },
-                        settings_units: {
-                            bn: 'প্রতি প্যাকেটে ইউনিট সংখ্যা',
-                            en: 'Units per Pack'
-                        },
-                        settings_save_btn: {
-                            bn: 'সেভ করুন',
-                            en: 'Save Settings'
-                        },
-                        settings_lang_label: {
-                            bn: 'ভাষা পরিবর্তন',
-                            en: 'Change Language'
-                        },
-                        settings_export_title: {
-                            bn: 'ডেটা ম্যানেজমেন্ট',
-                            en: 'Data Management'
-                        },
-                        settings_export_subtitle: {
-                            bn: 'আপনার সকল ডেটার ব্যাকআপ নিন।',
-                            en: 'Backup all your data.'
-                        },
-                        settings_export_btn: {
-                            bn: 'ডেটা এক্সপোর্ট করুন',
-                            en: 'Export Data'
-                        },
-                        settings_danger_zone: {
-                            bn: 'বিপদজনক এলাকা',
-                            en: 'Danger Zone'
-                        },
-                        settings_reset_subtitle: {
-                            bn: 'সাবধান! এটি আপনার সকল সেভ করা ডেটা মুছে ফেলবে।',
-                            en: 'Warning! This will erase all your saved data.'
-                        },
-                        settings_reset_btn: {
-                            bn: 'সব ডেটা রিসেট করুন',
-                            en: 'Reset All Data'
-                        },
-                        confirm_reset: {
-                            bn: 'আপনি কি নিশ্চিত যে আপনার সমস্ত ডেটা মুছে ফেলতে চান? এটি আর ফেরানো যাবে না।',
-                            en: 'Are you sure you want to delete all your data? This action cannot be undone.'
-                        },
-                        achievement_unlocked: {
-                            bn: 'অর্জন আনলকড!',
-                            en: 'Achievement Unlocked!'
-                        },
-                        motivation_tips_title: {
-                            bn: 'তাৎক্ষণিক করণীয়',
-                            en: 'Quick Tips'
-                        },
-                        motivation_quotes_title: {
-                            bn: 'অনুপ্রেরণামূলক উক্তি',
-                            en: 'Motivational Quotes'
-                        },
-                        tip1: {
-                            bn: '<strong>গভীর শ্বাস নিন:</strong> ৫ সেকেন্ড শ্বাস নিন, ধরে রাখুন, এবং ৭ সেকেন্ড ধরে ছাড়ুন। এটি আপনার মনকে শান্ত করবে।',
-                            en: '<strong>Deep Breath:</strong> Inhale for 5 seconds, hold, and exhale for 7 seconds. It will calm your mind.'
-                        },
-                        tip2: {
-                            bn: '<strong>পানি পান করুন:</strong> এক গ্লাস ঠান্ডা পানি পান করুন। এটি আপনার মনোযোগ অন্যদিকে সরাবে।',
-                            en: '<strong>Drink Water:</strong> Drink a glass of cold water. It will distract your attention.'
-                        },
-                        tip3: {
-                            bn: '<strong>একটু হেঁটে আসুন:</strong> ৫-১০ মিনিটের জন্য বাইরে বা ঘরের ভেতরেই একটু হাঁটুন। শারীরিক নড়াচড়া মানসিক চাপ কমায়।',
-                            en: '<strong>Take a Walk:</strong> Walk outside or even inside for 5-10 minutes. Physical movement reduces stress.'
-                        },
-                        tip4: {
-                            bn: '<strong>মনোযোগ সরান:</strong> গান শুনুন, কোনো বন্ধুকে ফোন দিন বা আপনার পছন্দের কোনো কাজ করুন।',
-                            en: '<strong>Distract Yourself:</strong> Listen to music, call a friend, or do something you enjoy.'
-                        },
-                        tip5: {
-                            bn: '<strong>লক্ষ্য মনে করুন:</strong> ভাবুন, কেন আপনি এই অভ্যাসটি ছাড়তে চেয়েছিলেন। আপনার চূড়ান্ত লক্ষ্য আপনাকে শক্তি জোগাবে।',
-                            en: '<strong>Remember Your Goal:</strong> Think about why you wanted to quit this habit. Your ultimate goal will give you strength.'
-                        },
-                        quote1: {
-                            bn: '"এগিয়ে যাওয়ার মূল রহস্য হলো শুরু করা।" <cite class="block text-right text-sm text-slate-400 mt-2">- মার্ক টোয়েন</cite>',
-                            en: '"The secret of getting ahead is getting started." <cite class="block text-right text-sm text-slate-400 mt-2">- Mark Twain</cite>'
-                        },
-                        quote2: {
-                            bn: '"যতক্ষণ আপনি থামছেন না, ততক্ষণ কত ধীরে এগোচ্ছেন সেটা কোনো বিষয় নয়।" <cite class="block text-right text-sm text-slate-400 mt-2">- কনফুসিয়াস</cite>',
-                            en: '"It does not matter how slowly you go as long as you do not stop." <cite class="block text-right text-sm text-slate-400 mt-2">- Confucius</cite>'
-                        },
-                    };
-                    let currentLang = 'bn';
+    document.addEventListener('DOMContentLoaded', () => {
+    // --- DICTIONARY FOR BILINGUAL SUPPORT ---
+    const strings = {
+        dashboard_title: { bn: 'ড্যাশবোর্ড', en: 'Dashboard' },
+        dashboard_subtitle: { bn: 'আপনার অভ্যাসের সারসংক্ষেপ', en: 'A summary of your habits' },
+        insights_title: { bn: 'ইনসাইট', en: 'Insights' },
+        insights_subtitle: { bn: 'আপনার অগ্রগতি ও অর্জন', en: 'Your progress & achievements' },
+        motivation_title: { bn: 'অনুপ্রেরণা', en: 'Motivation' },
+        motivation_subtitle: { bn: 'কঠিন সময়ে আপনার সঙ্গী', en: 'Your companion in tough times' },
+        settings_title: { bn: 'সেটিংস', en: 'Settings' },
+        settings_subtitle: { bn: 'অ্যাপটি নিজের মতো সাজান', en: 'Customize the app for you' },
+        nav_dashboard: { bn: 'ড্যাশবোর্ড', en: 'Dashboard' },
+        nav_insights: { bn: 'ইনসাইট', en: 'Insights' },
+        nav_motivation: { bn: 'অনুপ্রেরণা', en: 'Motivation' },
+        nav_settings: { bn: 'সেটিংস', en: 'Settings' },
+        modal_log_title: { bn: 'লগ করুন', en: 'Log an Entry' },
+        note_placeholder: { bn: 'একটি নোট যোগ করুন (ঐচ্ছিক)...', en: 'Add a note (optional)...' },
+        save_button: { bn: 'সংরক্ষণ করুন', en: 'Save Entry' },
+        close_button: { bn: 'বন্ধ করুন', en: 'Close' },
+        timer_start: { bn: 'এখনই শুরু করুন!', en: 'Start now!' },
+        timer_prefix: { bn: 'শেষবার থেকে বিরত', en: 'Abstinent For' },
+        today_count_label: { bn: 'আজকের গণনা', en: 'Today\'s Count' },
+        total_count_label: { bn: 'সর্বমোট গণনা', en: 'Total Count' },
+        money_saved_label: { bn: 'আনুমানিক সঞ্চয়', en: 'Est. Money Saved' },
+        tab_charts: { bn: 'চার্ট', en: 'Charts' },
+        tab_history: { bn: 'ইতিহাস', en: 'History' },
+        tab_achievements: { bn: 'অর্জন', en: 'Achievements' },
+        history_empty: { bn: 'এখনো কোনো ইতিহাস নেই।', en: 'No history yet.' },
+        settings_daily_limit: { bn: 'দৈনিক লক্ষ্য', en: 'Daily Limit' },
+        settings_old_avg: { bn: 'পূর্বের গড় ব্যবহার (দৈনিক)', en: 'Previous Daily Average' },
+        settings_cost: { bn: 'প্যাকেট/লিকুইডের দাম (৳)', en: 'Cost of Pack/Liquid (BDT)' },
+        settings_units: { bn: 'প্রতি প্যাকেটে ইউনিট সংখ্যা', en: 'Units per Pack' },
+        settings_save_btn: { bn: 'সেভ করুন', en: 'Save Settings' },
+        settings_lang_label: { bn: 'ভাষা পরিবর্তন', en: 'Change Language' },
+        settings_export_title: { bn: 'ডেটা ম্যানেজমেন্ট', en: 'Data Management' },
+        settings_export_subtitle: { bn: 'আপনার সকল ডেটার ব্যাকআপ নিন।', en: 'Backup all your data.' },
+        settings_export_btn: { bn: 'ডেটা এক্সপোর্ট করুন', en: 'Export Data' },
+        settings_danger_zone: { bn: 'বিপদজনক এলাকা', en: 'Danger Zone' },
+        settings_reset_subtitle: { bn: 'সাবধান! এটি আপনার সকল সেভ করা ডেটা মুছে ফেলবে।', en: 'Warning! This will erase all your saved data.' },
+        settings_reset_btn: { bn: 'সব ডেটা রিসেট করুন', en: 'Reset All Data' },
+        confirm_reset: { bn: 'আপনি কি নিশ্চিত যে আপনার সমস্ত ডেটা মুছে ফেলতে চান? এটি আর ফেরানো যাবে না।', en: 'Are you sure you want to delete all your data? This action cannot be undone.' },
+        achievement_unlocked: { bn: 'অর্জন আনলকড!', en: 'Achievement Unlocked!' },
+        motivation_tips_title: { bn: 'তাৎক্ষণিক করণীয়', en: 'Quick Tips' },
+        motivation_quotes_title: { bn: 'অনুপ্রেরণামূলক উক্তি', en: 'Motivational Quotes' },
+        tip1: { bn: '<strong>গভীর শ্বাস নিন:</strong> ৫ সেকেন্ড শ্বাস নিন, ধরে রাখুন, এবং ৭ সেকেন্ড ধরে ছাড়ুন। এটি আপনার মনকে শান্ত করবে।', en: '<strong>Deep Breath:</strong> Inhale for 5 seconds, hold, and exhale for 7 seconds. It will calm your mind.' },
+        tip2: { bn: '<strong>পানি পান করুন:</strong> এক গ্লাস ঠান্ডা পানি পান করুন। এটি আপনার মনোযোগ অন্যদিকে সরাবে।', en: '<strong>Drink Water:</strong> Drink a glass of cold water. It will distract your attention.' },
+        tip3: { bn: '<strong>একটু হেঁটে আসুন:</strong> ৫-১০ মিনিটের জন্য বাইরে বা ঘরের ভেতরেই একটু হাঁটুন। শারীরিক নড়াচড়া মানসিক চাপ কমায়।', en: '<strong>Take a Walk:</strong> Walk outside or even inside for 5-10 minutes. Physical movement reduces stress.' },
+        tip4: { bn: '<strong>মনোযোগ সরান:</strong> গান শুনুন, কোনো বন্ধুকে ফোন দিন বা আপনার পছন্দের কোনো কাজ করুন।', en: '<strong>Distract Yourself:</strong> Listen to music, call a friend, or do something you enjoy.' },
+        tip5: { bn: '<strong>লক্ষ্য মনে করুন:</strong> ভাবুন, কেন আপনি এই অভ্যাসটি ছাড়তে চেয়েছিলেন। আপনার চূড়ান্ত লক্ষ্য আপনাকে শক্তি জোগাবে।', en: '<strong>Remember Your Goal:</strong> Think about why you wanted to quit this habit. Your ultimate goal will give you strength.' },
+        quote1: { bn: '"এগিয়ে যাওয়ার মূল রহস্য হলো শুরু করা।" <cite class="block text-right text-sm text-slate-400 mt-2">- মার্ক টোয়েন</cite>', en: '"The secret of getting ahead is getting started." <cite class="block text-right text-sm text-slate-400 mt-2">- Mark Twain</cite>' },
+        quote2: { bn: '"যতক্ষণ আপনি থামছেন না, ততক্ষণ কত ধীরে এগোচ্ছেন সেটা কোনো বিষয় নয়।" <cite class="block text-right text-sm text-slate-400 mt-2">- কনফুসিয়াস</cite>', en: '"It does not matter how slowly you go as long as you do not stop." <cite class="block text-right text-sm text-slate-400 mt-2">- Confucius</cite>' },
+    };
+    let currentLang = 'bn';
 
-                    let appData = {};
-                    let mainChartInstance = null;
-                    let timerIntervals = {};
-                    let selectedTrackerForModal = null;
+    let appData = {};
+    let mainChartInstance = null;
+    let timerIntervals = {};
+    let selectedTrackerForModal = null;
 
-                    const defaultData = {
-                        settings: {
-                            language: 'bn'
-                        },
-                        trackers: {
-                            vape: {
-                                id: 'vape',
-                                name: 'Vape Tracker',
-                                icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
-                                gradient: 'gradient-vape',
-                                history: [],
-                                settings: {
-                                    dailyLimit: 20,
-                                    oldAvg: 60,
-                                    cost: 500,
-                                    units: 1500,
-                                    unitName: {
-                                        bn: 'পাফ',
-                                        en: 'Puffs'
-                                    }
-                                }
-                            },
-                            cigarette: {
-                                id: 'cigarette',
-                                name: 'Cigarette Tracker',
-                                icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-1.414 1.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-1.414-1.414A1 1 0 006.586 13H4"></path></svg>`,
-                                gradient: 'gradient-cigarette',
-                                history: [],
-                                settings: {
-                                    dailyLimit: 10,
-                                    oldAvg: 20,
-                                    cost: 300,
-                                    units: 20,
-                                    unitName: {
-                                        bn: 'টি',
-                                        en: 'Sticks'
-                                    }
-                                }
-                            },
-                            urge: {
-                                id: 'urge',
-                                name: 'Urge Tracker',
-                                icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>`,
-                                gradient: 'gradient-urge',
-                                history: [],
-                                settings: {
-                                    dailyLimit: 2,
-                                    oldAvg: 5,
-                                    cost: 0,
-                                    units: 0,
-                                    unitName: {
-                                        bn: 'বার',
-                                        en: 'Times'
-                                    }
-                                }
-                            }
-                        },
-                        achievements: {
-                            vape: {},
-                            cigarette: {},
-                            urge: {}
-                        }
-                    };
+    const defaultData = {
+        settings: { language: 'bn' },
+        trackers: {
+            vape: { 
+                id: 'vape', 
+                name: 'Vape Tracker', 
+                icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`, 
+                gradient: 'gradient-vape', 
+                history: [], 
+                settings: { dailyLimit: 20, oldAvg: 60, cost: 500, units: 1500, unitName: {bn: 'পাফ', en: 'Puffs'} } 
+            },
+            cigarette: { 
+                id: 'cigarette', 
+                name: 'Cigarette Tracker', 
+                icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-1.414 1.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-1.414-1.414A1 1 0 006.586 13H4"></path></svg>`, 
+                gradient: 'gradient-cigarette', 
+                history: [], 
+                settings: { dailyLimit: 10, oldAvg: 20, cost: 300, units: 20, unitName: {bn: 'টি', en: 'Sticks'} } 
+            }
+            /*
+            urge: { 
+                id: 'urge', 
+                name: 'Urge Tracker', 
+                icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>`, 
+                gradient: 'gradient-urge', 
+                history: [], 
+                settings: { dailyLimit: 2, oldAvg: 5, cost: 0, units: 0, unitName: {bn: 'বার', en: 'Times'} } 
+            }
+            */
+        },
+        achievements: { vape: {}, cigarette: {} /*, urge: {}*/ }
+    };
+    
+    const achievementConfig = {
+        '1d_free': { name: { en: '24 Hours Free', bn: '২৪ ঘণ্টা মুক্ত' }, icon: '🥉', duration: 24 * 3600 * 1000 },
+        '3d_free': { name: { en: '3 Days Strong', bn: '৩ দিন শক্তিশালী' }, icon: '🥉', duration: 3 * 24 * 3600 * 1000 },
+        '7d_free': { name: { en: '1 Week Milestone', bn: '১ সপ্তাহের মাইলফলক' }, icon: '🥈', duration: 7 * 24 * 3600 * 1000 },
+        '30d_free': { name: { en: '1 Month Champion', bn: '১ মাসের চ্যাম্পিয়ন' }, icon: '🥇', duration: 30 * 24 * 3600 * 1000 },
+    };
+    
+    // --- DOM ELEMENTS ---
+    const pages = document.querySelectorAll('.page');
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const addEntryBtn = document.getElementById('addEntryBtn');
+    const addEntryModal = document.getElementById('addEntryModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const saveEntryBtn = document.getElementById('saveEntryBtn');
+    const entryNote = document.getElementById('entryNote');
+    const insightsTabButtons = document.querySelectorAll('.insights-tab-btn');
+    const insightsTabContents = document.querySelectorAll('.insights-tab-content');
+    const toastEl = document.getElementById('toast');
+    
+    const saveData = () => localStorage.setItem('lifeTrackProData', JSON.stringify(appData));
+    const loadData = () => {
+        const data = localStorage.getItem('lifeTrackProData');
+        appData = data ? JSON.parse(data) : JSON.parse(JSON.stringify(defaultData));
+    };
+    
+    function setLanguage(lang) {
+        currentLang = lang;
+        if (appData && appData.settings) {
+            appData.settings.language = lang;
+        }
+        saveData();
+        document.documentElement.lang = lang;
+        document.querySelectorAll('[data-lang-key]').forEach(el => {
+            const key = el.dataset.langKey;
+            if (strings[key] && strings[key][currentLang]) {
+                el.innerHTML = strings[key][currentLang];
+            }
+        });
+        document.querySelectorAll('[data-lang-key-placeholder]').forEach(el => {
+            const key = el.dataset.langKeyPlaceholder;
+            if(strings[key] && strings[key][currentLang]) {
+                el.placeholder = strings[key][currentLang];
+            }
+        });
+        const activePage = document.querySelector('.page.active').id;
+        renderAllPages();
+        switchPage(activePage, true); // force re-render
+    }
 
-                    const achievementConfig = {
-                        '1d_free': {
-                            name: {
-                                en: '24 Hours Free',
-                                bn: '২৪ ঘণ্টা মুক্ত'
-                            },
-                            icon: '🥉',
-                            duration: 24 * 3600 * 1000
-                        },
-                        '3d_free': {
-                            name: {
-                                en: '3 Days Strong',
-                                bn: '৩ দিন শক্তিশালী'
-                            },
-                            icon: '🥉',
-                            duration: 3 * 24 * 3600 * 1000
-                        },
-                        '7d_free': {
-                            name: {
-                                en: '1 Week Milestone',
-                                bn: '১ সপ্তাহের মাইলফলক'
-                            },
-                            icon: '🥈',
-                            duration: 7 * 24 * 3600 * 1000
-                        },
-                        '30d_free': {
-                            name: {
-                                en: '1 Month Champion',
-                                bn: '১ মাসের চ্যাম্পিয়ন'
-                            },
-                            icon: '🥇',
-                            duration: 30 * 24 * 3600 * 1000
-                        },
-                    };
+    function logEntry(trackerId, note) {
+        if (!trackerId) return;
+        appData.trackers[trackerId].history.push({ timestamp: Date.now(), note: note });
+        saveData();
+        checkAllAchievements();
+        renderDashboard();
+        closeModal();
+    }
 
-                    // --- DOM ELEMENTS ---
-                    const pages = document.querySelectorAll('.page');
-                    const navButtons = document.querySelectorAll('.nav-btn');
-                    const addEntryBtn = document.getElementById('addEntryBtn');
-                    const addEntryModal = document.getElementById('addEntryModal');
-                    const closeModalBtn = document.getElementById('closeModalBtn');
-                    const saveEntryBtn = document.getElementById('saveEntryBtn');
-                    const entryNote = document.getElementById('entryNote');
-                    const insightsTabButtons = document.querySelectorAll('.insights-tab-btn');
-                    const insightsTabContents = document.querySelectorAll('.insights-tab-content');
-                    const toastEl = document.getElementById('toast');
+    function checkAllAchievements() {
+        Object.keys(appData.trackers).forEach(trackerId => {
+            const tracker = appData.trackers[trackerId];
+            const history = tracker.history;
+            if (history.length === 0) return;
+            const lastEntryTime = history[history.length - 1].timestamp;
+            const timeSince = Date.now() - lastEntryTime;
 
-                    const saveData = () => localStorage.setItem('lifeTrackProData', JSON.stringify(appData));
-                    const loadData = () => {
-                        const data = localStorage.getItem('lifeTrackProData');
-                        appData = data ? JSON.parse(data) : JSON.parse(JSON.stringify(defaultData));
-                    };
+            Object.keys(achievementConfig).forEach(achieveId => {
+                const config = achievementConfig[achieveId];
+                if (timeSince >= config.duration && !(appData.achievements[trackerId] && appData.achievements[trackerId][achieveId])) {
+                    if (!appData.achievements[trackerId]) appData.achievements[trackerId] = {};
+                    appData.achievements[trackerId][achieveId] = true;
+                    saveData();
+                    const unlockedText = strings['achievement_unlocked'][currentLang];
+                    showToast(`${unlockedText}<br>${tracker.name}: ${config.name[currentLang]}`);
+                }
+            });
+        });
+    }
 
-                    function setLanguage(lang) {
-                        currentLang = lang;
-                        if (appData && appData.settings) {
-                            appData.settings.language = lang;
-                        }
-                        saveData();
-                        document.documentElement.lang = lang;
-                        document.querySelectorAll('[data-lang-key]').forEach(el => {
-                            const key = el.dataset.langKey;
-                            if (strings[key] && strings[key][currentLang]) {
-                                el.innerHTML = strings[key][currentLang];
-                            }
-                        });
-                        document.querySelectorAll('[data-lang-key-placeholder]').forEach(el => {
-                            const key = el.dataset.langKeyPlaceholder;
-                            if (strings[key] && strings[key][currentLang]) {
-                                el.placeholder = strings[key][currentLang];
-                            }
-                        });
-                        const activePage = document.querySelector('.page.active').id;
-                        renderAllPages();
-                        switchPage(activePage, true); // force re-render
-                    }
+    function renderAllPages() {
+        renderMotivationPage();
+        renderSettingsPage();
+    }
 
-                    function logEntry(trackerId, note) {
-                        if (!trackerId) return;
-                        appData.trackers[trackerId].history.push({
-                            timestamp: Date.now(),
-                            note: note
-                        });
-                        saveData();
-                        checkAllAchievements();
-                        renderDashboard();
-                        closeModal();
-                    }
+    function renderDashboard() {
+        const grid = document.getElementById('dashboardGrid');
+        grid.innerHTML = '';
+        Object.values(appData.trackers).forEach(tracker => {
+            const todayStart = new Date().setHours(0, 0, 0, 0);
+            const countToday = tracker.history.filter(entry => entry.timestamp >= todayStart).length;
+            const lastEntry = tracker.history.length > 0 ? tracker.history[tracker.history.length - 1].timestamp : null;
+            const unitName = tracker.settings.unitName[currentLang] || tracker.settings.unitName['en'];
 
-                    function checkAllAchievements() {
-                        Object.keys(appData.trackers).forEach(trackerId => {
-                            const tracker = appData.trackers[trackerId];
-                            const history = tracker.history;
-                            if (history.length === 0) return;
-                            const lastEntryTime = history[history.length - 1].timestamp;
-                            const timeSince = Date.now() - lastEntryTime;
-
-                            Object.keys(achievementConfig).forEach(achieveId => {
-                                const config = achievementConfig[achieveId];
-                                if (timeSince >= config.duration && !(appData.achievements[trackerId] && appData.achievements[trackerId][achieveId])) {
-                                    if (!appData.achievements[trackerId]) appData.achievements[trackerId] = {};
-                                    appData.achievements[trackerId][achieveId] = true;
-                                    saveData();
-                                    const unlockedText = strings['achievement_unlocked'][currentLang];
-                                    showToast(`${unlockedText}<br>${tracker.name}: ${config.name[currentLang]}`);
-                                }
-                            });
-                        });
-                    }
-
-                    function renderAllPages() {
-                        renderMotivationPage();
-                        renderSettingsPage();
-                    }
-
-                    function renderDashboard() {
-                        const grid = document.getElementById('dashboardGrid');
-                        grid.innerHTML = '';
-                        Object.values(appData.trackers).forEach(tracker => {
-                            const todayStart = new Date().setHours(0, 0, 0, 0);
-                            const countToday = tracker.history.filter(entry => entry.timestamp >= todayStart).length;
-                            const lastEntry = tracker.history.length > 0 ? tracker.history[tracker.history.length - 1].timestamp : null;
-                            const unitName = tracker.settings.unitName[currentLang] || tracker.settings.unitName['en'];
-
-                            const card = document.createElement('div');
-                            card.className = `p-4 rounded-xl shadow-lg text-white ${tracker.gradient}`;
-                            card.innerHTML = `
+            const card = document.createElement('div');
+            card.className = `p-4 rounded-xl shadow-lg text-white ${tracker.gradient}`;
+            card.innerHTML = `
                 <div class="flex justify-between items-start">
                     <div>
                         <h2 class="text-xl font-bold">${tracker.name}</h2>
@@ -579,111 +322,91 @@
                     <p class="text-sm opacity-80">${strings['timer_prefix'][currentLang]}</p>
                     <p id="timer-${tracker.id}" class="text-2xl font-semibold">${strings['timer_start'][currentLang]}</p>
                 </div>`;
-                            grid.appendChild(card);
-                            startTimer(tracker.id, lastEntry);
-                        });
-                    }
+            grid.appendChild(card);
+            startTimer(tracker.id, lastEntry);
+        });
+    }
 
-                    function renderInsightsPage(trackerId) {
-                        const select = document.getElementById('insightsTrackerSelect');
-                        const currentSelection = trackerId || select.value || 'vape';
-                        select.innerHTML = '';
-                        Object.values(appData.trackers).forEach(tracker => {
-                            const option = document.createElement('option');
-                            option.value = tracker.id;
-                            option.textContent = tracker.name;
-                            select.appendChild(option);
-                        });
-                        select.value = currentSelection;
+    function renderInsightsPage(trackerId) {
+        const select = document.getElementById('insightsTrackerSelect');
+        const currentSelection = trackerId || select.value || Object.keys(appData.trackers)[0];
+        select.innerHTML = '';
+        Object.values(appData.trackers).forEach(tracker => {
+            const option = document.createElement('option');
+            option.value = tracker.id;
+            option.textContent = tracker.name;
+            select.appendChild(option);
+        });
+        select.value = currentSelection;
+        
+        const activeTab = document.querySelector('.insights-tab-btn.active').dataset.tab;
+        switchInsightsTab(activeTab, currentSelection);
+    }
+    
+    function renderStatsSummary(trackerId) {
+        const summaryEl = document.getElementById('statsSummary');
+        const tracker = appData.trackers[trackerId];
+        const history = tracker.history;
+        
+        const totalEntries = history.length;
+        const todayStart = new Date().setHours(0,0,0,0);
+        const todayEntries = history.filter(e => e.timestamp >= todayStart).length;
+        
+        let moneySaved = 0;
+        if(tracker.settings.cost > 0 && tracker.settings.units > 0){
+            const costPerUnit = tracker.settings.cost / tracker.settings.units;
+            const startDate = history.length > 0 ? new Date(history[0].timestamp) : new Date();
+            const days = Math.max(1, (Date.now() - startDate.getTime()) / (1000 * 3600 * 24));
+            const expectedEntries = Math.floor(days * tracker.settings.oldAvg);
+            const savedEntries = expectedEntries - totalEntries;
+            moneySaved = savedEntries > 0 ? (savedEntries * costPerUnit).toFixed(2) : 0;
+        }
 
-                        const activeTab = document.querySelector('.insights-tab-btn.active').dataset.tab;
-                        switchInsightsTab(activeTab, currentSelection);
-                    }
-
-                    function renderStatsSummary(trackerId) {
-                        const summaryEl = document.getElementById('statsSummary');
-                        const tracker = appData.trackers[trackerId];
-                        const history = tracker.history;
-
-                        const totalEntries = history.length;
-                        const todayStart = new Date().setHours(0, 0, 0, 0);
-                        const todayEntries = history.filter(e => e.timestamp >= todayStart).length;
-
-                        let moneySaved = 0;
-                        if (tracker.settings.cost > 0 && tracker.settings.units > 0) {
-                            const costPerUnit = tracker.settings.cost / tracker.settings.units;
-                            const startDate = history.length > 0 ? new Date(history[0].timestamp) : new Date();
-                            const days = Math.max(1, (Date.now() - startDate.getTime()) / (1000 * 3600 * 24));
-                            const expectedEntries = Math.floor(days * tracker.settings.oldAvg);
-                            const savedEntries = expectedEntries - totalEntries;
-                            moneySaved = savedEntries > 0 ? (savedEntries * costPerUnit).toFixed(2) : 0;
-                        }
-
-                        summaryEl.innerHTML = `
+        summaryEl.innerHTML = `
             <div class="bg-slate-800 p-3 rounded-lg"><p class="text-slate-400 text-sm">${strings.today_count_label[currentLang]}</p><p class="font-bold text-xl">${todayEntries}</p></div>
             <div class="bg-slate-800 p-3 rounded-lg"><p class="text-slate-400 text-sm">${strings.total_count_label[currentLang]}</p><p class="font-bold text-xl">${totalEntries}</p></div>
             <div class="bg-slate-800 p-3 rounded-lg col-span-2"><p class="text-slate-400 text-sm">${strings.money_saved_label[currentLang]}</p><p class="font-bold text-xl text-green-400">৳${moneySaved}</p></div>`;
-                    }
+    }
 
-                    function renderMainChart(trackerId) {
-                        const tracker = appData.trackers[trackerId];
-                        const ctx = document.getElementById('mainChart').getContext('2d');
+    function renderMainChart(trackerId) {
+        const tracker = appData.trackers[trackerId];
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        
+        const dataPoints = tracker.history.reduce((acc, entry) => {
+            const date = new Date(entry.timestamp).setHours(0,0,0,0);
+            acc[date] = (acc[date] || 0) + 1;
+            return acc;
+        }, {});
 
-                        const dataPoints = tracker.history.reduce((acc, entry) => {
-                            const date = new Date(entry.timestamp).setHours(0, 0, 0, 0);
-                            acc[date] = (acc[date] || 0) + 1;
-                            return acc;
-                        }, {});
+        const labels = Object.keys(dataPoints).map(ts => new Date(parseInt(ts)));
+        const data = Object.values(dataPoints);
 
-                        const labels = Object.keys(dataPoints).map(ts => new Date(parseInt(ts)));
-                        const data = Object.values(dataPoints);
+        if (mainChartInstance) mainChartInstance.destroy();
+        mainChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: `${tracker.name} (${tracker.settings.unitName[currentLang]})`,
+                    data: data,
+                    backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5,
+                }]
+            },
+            options: { responsive: true, scales: { x: { type: 'time', time: { unit: 'day' }, ticks: { color: '#9ca3af' } }, y: { beginAtZero: true, ticks: { color: '#9ca3af', stepSize: 1 } } } }
+        });
+    }
 
-                        if (mainChartInstance) mainChartInstance.destroy();
-                        mainChartInstance = new Chart(ctx, {
-                            type: 'bar',
-                            data: {
-                                labels: labels,
-                                datasets: [{
-                                    label: `${tracker.name} (${tracker.settings.unitName[currentLang]})`,
-                                    data: data,
-                                    backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                                    borderColor: 'rgba(59, 130, 246, 1)',
-                                    borderWidth: 1,
-                                    borderRadius: 5,
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                scales: {
-                                    x: {
-                                        type: 'time',
-                                        time: {
-                                            unit: 'day'
-                                        },
-                                        ticks: {
-                                            color: '#9ca3af'
-                                        }
-                                    },
-                                    y: {
-                                        beginAtZero: true,
-                                        ticks: {
-                                            color: '#9ca3af',
-                                            stepSize: 1
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
-
-                    function renderHistory(trackerId) {
-                        const history = appData.trackers[trackerId].history.slice().reverse();
-                        const container = document.getElementById('historyTab');
-                        if (history.length === 0) {
-                            container.innerHTML = `<p class="text-slate-400 text-center">${strings.history_empty[currentLang]}</p>`;
-                            return;
-                        }
-                        container.innerHTML = history.map(entry => `
+    function renderHistory(trackerId) {
+        const history = appData.trackers[trackerId].history.slice().reverse();
+        const container = document.getElementById('historyTab');
+        if (history.length === 0) {
+            container.innerHTML = `<p class="text-slate-400 text-center">${strings.history_empty[currentLang]}</p>`;
+            return;
+        }
+        container.innerHTML = history.map(entry => `
             <div class="bg-slate-800 p-3 rounded-lg">
                 <p class="font-semibold">${new Date(entry.timestamp).toLocaleString()}</p>
                 ${entry.note ? `<p class="text-sm text-slate-300 mt-1 pl-2 border-l-2 border-slate-600">${entry.note}</p>` : ''}
@@ -938,5 +661,5 @@
 });
     </script>
 </body>
-
 </html>
+

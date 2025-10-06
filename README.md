@@ -2,5 +2,6 @@
 
 ### Live page : https://farhanbinshafiq.github.io/LifeTrack-Pro---A-Modern-Habit-Tracker/
 
-https://tinyurl.com/lifetrackerhack/
+https://tinyurl.com/lifetrackerhack
+
 
